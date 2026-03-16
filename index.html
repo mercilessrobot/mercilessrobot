@@ -650,6 +650,90 @@ body::after {
   </div>
 </div>
 
+<!-- Scan overlay -->
+<div id="scan-overlay" class="overlay-panel">
+  <div class="overlay-content">
+    <div>ENVIRONMENT SCAN</div>
+    <br>
+    <div>SCANNING SECTOR 01... OK</div>
+    <div>SCANNING SECTOR 02... OK</div>
+    <div>SCANNING SECTOR 03... OK</div>
+    <div>SCANNING SECTOR 04... ANOMALY DETECTED</div>
+    <br>
+    <div>SCAN COMPLETE. 1 ANOMALY FOUND IN SECTOR 04.</div>
+    <div>USE "MAP" TO VIEW SECTOR LAYOUT.</div>
+    <br>
+    <button class="esc-btn" data-overlay="scan-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- Map overlay -->
+<div id="map-overlay" class="overlay-panel">
+  <div class="overlay-content" style="font-size:1.2rem;">
+    <div>SECTOR MAP</div>
+    <br>
+    <pre style="font-family:inherit;font-size:inherit;color:inherit;margin:0;">┌─────────┬─────────┐
+│         │         │
+│  SEC 01 │  SEC 02 │
+│   [OK]  │   [OK]  │
+│         │         │
+├─────────┼─────────┤
+│         │         │
+│  SEC 03 │  SEC 04 │
+│   [OK]  │  [WARN] │
+│         │         │
+└─────────┴─────────┘</pre>
+    <br>
+    <button class="esc-btn" data-overlay="map-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- Log overlay -->
+<div id="log-overlay" class="overlay-panel">
+  <div class="overlay-content">
+    <div>SYSTEM LOG (LAST 5 ENTRIES)</div>
+    <br>
+    <div>[03.16.26 08:00:12] SYSTEM BOOT INITIATED</div>
+    <div>[03.16.26 08:00:14] CORE MODULES LOADED</div>
+    <div>[03.16.26 08:00:15] NETWORK INTERFACE UP</div>
+    <div>[03.16.26 08:00:16] MERCILESS1.0 READY</div>
+    <div>[03.16.26 08:01:03] USER SESSION STARTED</div>
+    <br>
+    <button class="esc-btn" data-overlay="log-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- Ping overlay -->
+<div id="ping-overlay" class="overlay-panel">
+  <div class="overlay-content">
+    <div>PINGING CENTRAL NODE</div>
+    <br>
+    <div>REPLY FROM 10.0.0.1 &mdash; TIME=12MS</div>
+    <div>REPLY FROM 10.0.0.1 &mdash; TIME=14MS</div>
+    <div>REPLY FROM 10.0.0.1 &mdash; TIME=11MS</div>
+    <br>
+    <div>3 PACKETS SENT, 3 RECEIVED. AVG=12MS</div>
+    <br>
+    <button class="esc-btn" data-overlay="ping-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- About overlay -->
+<div id="about-overlay" class="overlay-panel">
+  <div class="overlay-content">
+    <div>MERCILESS1.0</div>
+    <br>
+    <div>EXPERIMENTAL COMMAND INTERFACE</div>
+    <div>VERSION 1.0 BUILD 7734</div>
+    <div>CLASSIFICATION: UNRESTRICTED</div>
+    <br>
+    <div>DESIGNED FOR DEPTH AND PRECISION.</div>
+    <br>
+    <button class="esc-btn" data-overlay="about-overlay">ESC</button>
+  </div>
+</div>
+
+
 <script>
 /* ═══════════════════════════════════════════
    CROSSHAIR TRACKING
@@ -790,42 +874,19 @@ const commands = {
   },
 
   scan: () => {
-    const lines = [
-      'INITIATING ENVIRONMENT SCAN...',
-    ];
-    setTimeout(() => addLines(['SCANNING SECTOR 01... OK']), 600);
-    setTimeout(() => addLines(['SCANNING SECTOR 02... OK']), 1200);
-    setTimeout(() => addLines(['SCANNING SECTOR 03... OK']), 1800);
-    setTimeout(() => addLines(['SCANNING SECTOR 04... ANOMALY DETECTED']), 2400);
-    setTimeout(() => addLines(['', 'SCAN COMPLETE. 1 ANOMALY FOUND IN SECTOR 04.', 'USE "MAP" TO VIEW SECTOR LAYOUT.']), 3200);
-    return lines;
+    showOverlay('scan-overlay');
+    return [];
   },
 
-  map: () => [
-    'SECTOR MAP:',
-    '',
-    '  ┌─────────┬─────────┐',
-    '  │         │         │',
-    '  │  SEC 01 │  SEC 02 │',
-    '  │   [OK]  │   [OK]  │',
-    '  │         │         │',
-    '  ├─────────┼─────────┤',
-    '  │         │         │',
-    '  │  SEC 03 │  SEC 04 │',
-    '  │   [OK]  │  [WARN] │',
-    '  │         │         │',
-    '  └─────────┴─────────┘',
-  ],
+  map: () => {
+    showOverlay('map-overlay');
+    return [];
+  },
 
-  log: () => [
-    'SYSTEM LOG (LAST 5 ENTRIES):',
-    '',
-    '  [03.16.26 08:00:12] SYSTEM BOOT INITIATED',
-    '  [03.16.26 08:00:14] CORE MODULES LOADED',
-    '  [03.16.26 08:00:15] NETWORK INTERFACE UP',
-    '  [03.16.26 08:00:16] MERCILESS1.0 READY',
-    '  [03.16.26 08:01:03] USER SESSION STARTED',
-  ],
+  log: () => {
+    showOverlay('log-overlay');
+    return [];
+  },
 
   clear: () => {
     output.innerHTML = '';
@@ -833,23 +894,14 @@ const commands = {
   },
 
   ping: () => {
-    const lines = ['PINGING CENTRAL NODE...'];
-    setTimeout(() => addLines(['  REPLY FROM 10.0.0.1 — TIME=12MS']), 400);
-    setTimeout(() => addLines(['  REPLY FROM 10.0.0.1 — TIME=14MS']), 800);
-    setTimeout(() => addLines(['  REPLY FROM 10.0.0.1 — TIME=11MS']), 1200);
-    setTimeout(() => addLines(['', '3 PACKETS SENT, 3 RECEIVED. AVG=12MS']), 1800);
-    return lines;
+    showOverlay('ping-overlay');
+    return [];
   },
 
-  about: () => [
-    'MERCILESS1.0',
-    '',
-    '  EXPERIMENTAL COMMAND INTERFACE',
-    '  VERSION 1.0 BUILD 7734',
-    '  CLASSIFICATION: UNRESTRICTED',
-    '',
-    '  DESIGNED FOR DEPTH AND PRECISION.',
-  ],
+  about: () => {
+    showOverlay('about-overlay');
+    return [];
+  },
 
   date: () => {
     const now = new Date();
