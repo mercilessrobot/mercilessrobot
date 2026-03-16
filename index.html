@@ -385,7 +385,7 @@ body::after {
 /* ═══════════════════════════════════════════
    HELP OVERLAY
    ═══════════════════════════════════════════ */
-#help-overlay {
+.overlay-panel {
   position: fixed;
   inset: 0;
   z-index: 9000;
@@ -397,12 +397,12 @@ body::after {
   transition: opacity 0.5s ease;
 }
 
-#help-overlay.active {
+.overlay-panel.active {
   opacity: 1;
   pointer-events: auto;
 }
 
-#help-content {
+.overlay-content {
   padding: 0 32px;
   max-width: 700px;
   font-size: 1.4rem;
@@ -416,15 +416,15 @@ body::after {
     -3px 0 0 rgba(20, 255, 60, 0.08);
 }
 
-#help-content .help-list-item {
+.overlay-content .help-list-item {
   padding-left: 1.5em;
 }
 
-#help-content .help-list-item::before {
+.overlay-content .help-list-item::before {
   content: '· ';
 }
 
-#esc-btn {
+.esc-btn {
   display: inline-block;
   margin-top: 1.5em;
   padding: 4px 12px;
@@ -442,7 +442,7 @@ body::after {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-#esc-btn:hover {
+.esc-btn:hover {
   border-color: var(--amber);
   box-shadow: 0 0 8px rgba(212, 137, 10, 0.3);
 }
@@ -594,8 +594,8 @@ body::after {
 </div><!-- end #bg-layer -->
 
 <!-- Help overlay (outside bg-layer so it doesn't blur) -->
-<div id="help-overlay">
-  <div id="help-content">
+<div id="help-overlay" class="overlay-panel">
+  <div class="overlay-content">
     <div>mOS v1.0</div>
     <div>ROBOT INDUSTRIES</div>
     <br>
@@ -608,7 +608,45 @@ body::after {
     <br>
     <div>TYPE A PROGRAM NAME TO LAUNCH IT</div>
     <br>
-    <button id="esc-btn">ESC</button>
+    <button class="esc-btn" data-overlay="help-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- Status overlay -->
+<div id="status-overlay" class="overlay-panel">
+  <div class="overlay-content">
+    <div>SYSTEM STATUS</div>
+    <br>
+    <div>CORE STATUS &mdash; ONLINE</div>
+    <div>MEMORY &mdash; 84.2% AVAILABLE</div>
+    <div>NETWORK &mdash; CONNECTED</div>
+    <div>THREAT LEVEL &mdash; LOW</div>
+    <div id="status-uptime">UPTIME &mdash; 0H 0M 0S</div>
+    <div>BUILD &mdash; 1.0.7734</div>
+    <br>
+    <button class="esc-btn" data-overlay="status-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- Commands overlay -->
+<div id="commands-overlay" class="overlay-panel">
+  <div class="overlay-content">
+    <div>AVAILABLE COMMANDS</div>
+    <br>
+    <div class="help-list-item">HELP</div>
+    <div class="help-list-item">STATUS</div>
+    <div class="help-list-item">COMMANDS</div>
+    <div class="help-list-item">SCAN</div>
+    <div class="help-list-item">MAP</div>
+    <div class="help-list-item">LOG</div>
+    <div class="help-list-item">PING</div>
+    <div class="help-list-item">ABOUT</div>
+    <div class="help-list-item">DATE</div>
+    <div class="help-list-item">CLEAR</div>
+    <div class="help-list-item">SOUND ON</div>
+    <div class="help-list-item">SOUND OFF</div>
+    <br>
+    <button class="esc-btn" data-overlay="commands-overlay">ESC</button>
   </div>
 </div>
 
@@ -673,57 +711,82 @@ setInterval(updateClock, 1000);
    ═══════════════════════════════════════════ */
 const input = document.getElementById('command-input');
 const output = document.getElementById('output');
+const startTime = Date.now();
 
-const helpOverlay = document.getElementById('help-overlay');
-const escBtn = document.getElementById('esc-btn');
 const bgLayer = document.getElementById('bg-layer');
+let activeOverlay = null;
 
-function showHelp() {
-  helpOverlay.classList.add('active');
+function showOverlay(id) {
+  if (activeOverlay) hideOverlay();
+  const el = document.getElementById(id);
+  if (!el) return;
+  activeOverlay = el;
+  el.classList.add('active');
   bgLayer.classList.add('zoomed-out');
   input.disabled = true;
   input.blur();
+  playOpenSound();
+
+  // Update uptime if status
+  if (id === 'status-overlay') {
+    const uptime = Math.floor((Date.now() - startTime) / 1000);
+    const h = Math.floor(uptime / 3600);
+    const m = Math.floor((uptime % 3600) / 60);
+    const s = uptime % 60;
+    document.getElementById('status-uptime').textContent = `UPTIME \u2014 ${h}H ${m}M ${s}S`;
+  }
 }
 
-function hideHelp() {
-  helpOverlay.classList.remove('active');
+function hideOverlay() {
+  if (!activeOverlay) return;
+  activeOverlay.classList.remove('active');
+  activeOverlay = null;
   bgLayer.classList.remove('zoomed-out');
   input.disabled = false;
   input.focus();
+  playCloseSound();
 }
 
-escBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  hideHelp();
+// ESC buttons
+document.querySelectorAll('.esc-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideOverlay();
+  });
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && helpOverlay.classList.contains('active')) {
-    hideHelp();
+  if (e.key === 'Escape' && activeOverlay) {
+    hideOverlay();
   }
 });
 
 const commands = {
   help: () => {
-    showHelp();
+    showOverlay('help-overlay');
     return [];
   },
 
   status: () => {
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-    const h = Math.floor(uptime / 3600);
-    const m = Math.floor((uptime % 3600) / 60);
-    const s = uptime % 60;
-    return [
-      'SYSTEM STATUS:',
-      '',
-      '  CORE STATUS     — ONLINE',
-      '  MEMORY          — 84.2% AVAILABLE',
-      '  NETWORK         — CONNECTED',
-      '  THREAT LEVEL    — LOW',
-      `  UPTIME          — ${h}H ${m}M ${s}S`,
-      '  BUILD           — 1.0.7734',
-    ];
+    showOverlay('status-overlay');
+    return [];
+  },
+
+  commands: () => {
+    showOverlay('commands-overlay');
+    return [];
+  },
+
+  'sound off': () => {
+    soundEnabled = false;
+    if (masterGain) masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    return ['SOUND DISABLED.'];
+  },
+
+  'sound on': () => {
+    soundEnabled = true;
+    if (masterGain) masterGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    return ['SOUND ENABLED.'];
   },
 
   scan: () => {
@@ -796,8 +859,6 @@ const commands = {
   },
 };
 
-const startTime = Date.now();
-
 function addLines(lines, dim = false) {
   lines.forEach((line, i) => {
     setTimeout(() => {
@@ -808,6 +869,78 @@ function addLines(lines, dim = false) {
       output.scrollTop = output.scrollHeight;
     }, i * 40);
   });
+}
+
+/* ═══════════════════════════════════════════
+   COMMAND ACKNOWLEDGE SOUND
+   ═══════════════════════════════════════════ */
+function playCommandSound() {
+  if (!audioCtx || !soundEnabled) return;
+  const now = audioCtx.currentTime;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.06, now + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  gain.connect(audioCtx.destination);
+
+  // Soft sine sweep — quick high-to-low "voop"
+  const osc1 = audioCtx.createOscillator();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(480, now);
+  osc1.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+  osc1.frequency.exponentialRampToValueAtTime(180, now + 0.2); // settle back up slightly
+
+  // Resonant filter — gives it body
+  const bpf = audioCtx.createBiquadFilter();
+  bpf.type = 'bandpass';
+  bpf.frequency.setValueAtTime(600, now);
+  bpf.frequency.exponentialRampToValueAtTime(250, now + 0.08);
+  bpf.frequency.exponentialRampToValueAtTime(300, now + 0.2);
+  bpf.Q.value = 4;
+
+  osc1.connect(bpf);
+  bpf.connect(gain);
+
+  osc1.start(now);
+  osc1.stop(now + 0.25);
+}
+
+// "oooweep" — opening sound for overlays
+function playOpenSound() {
+  if (!audioCtx || !soundEnabled) return;
+  const now = audioCtx.currentTime;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.05, now + 0.04);
+  gain.gain.setValueAtTime(0.05, now + 0.18);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  gain.connect(audioCtx.destination);
+
+  // "ooo" low start, then "weep" sweep up
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(200, now);
+  osc.frequency.setValueAtTime(200, now + 0.1);
+  osc.frequency.exponentialRampToValueAtTime(600, now + 0.22);
+  osc.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+
+  const bpf = audioCtx.createBiquadFilter();
+  bpf.type = 'bandpass';
+  bpf.frequency.setValueAtTime(300, now);
+  bpf.frequency.exponentialRampToValueAtTime(900, now + 0.25);
+  bpf.Q.value = 3;
+
+  osc.connect(bpf);
+  bpf.connect(gain);
+  osc.start(now);
+  osc.stop(now + 0.35);
+}
+
+// Descending "voop" — closing sound for overlays
+function playCloseSound() {
+  playCommandSound();
 }
 
 input.addEventListener('keydown', (e) => {
@@ -828,6 +961,7 @@ input.addEventListener('keydown', (e) => {
 
     setTimeout(() => {
       if (commands[cmd]) {
+        playCommandSound();
         const result = commands[cmd]();
         if (result.length > 0) {
           addLines(result);
@@ -1142,6 +1276,194 @@ window.addEventListener('resize', () => { if (ssActive) resizeCanvas(); });
 
 // Start idle timer
 resetIdleTimer();
+
+/* ═══════════════════════════════════════════
+   AMBIENT SOUND — CRT HUM + HDD CLICKS
+   ═══════════════════════════════════════════ */
+let audioStarted = false;
+let audioCtx;
+let masterGain = null;
+let soundEnabled = true;
+
+function startAmbientAudio() {
+  if (audioStarted) return;
+  audioStarted = true;
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Master gain — keep it subtle
+  const master = audioCtx.createGain();
+  master.gain.value = soundEnabled ? 0.15 : 0;
+  master.connect(audioCtx.destination);
+  masterGain = master;
+
+  // ── CRT Monitor Hum (60Hz fundamental + harmonics) ──
+  const humGain = audioCtx.createGain();
+  humGain.gain.value = 0.35;
+  humGain.connect(master);
+
+  // Fundamental 60Hz
+  const hum60 = audioCtx.createOscillator();
+  hum60.type = 'sine';
+  hum60.frequency.value = 60;
+  const hum60g = audioCtx.createGain();
+  hum60g.gain.value = 0.5;
+  hum60.connect(hum60g);
+  hum60g.connect(humGain);
+  hum60.start();
+
+  // 2nd harmonic 120Hz
+  const hum120 = audioCtx.createOscillator();
+  hum120.type = 'sine';
+  hum120.frequency.value = 120;
+  const hum120g = audioCtx.createGain();
+  hum120g.gain.value = 0.25;
+  hum120.connect(hum120g);
+  hum120g.connect(humGain);
+  hum120.start();
+
+  // 3rd harmonic 180Hz — adds buzziness
+  const hum180 = audioCtx.createOscillator();
+  hum180.type = 'sine';
+  hum180.frequency.value = 180;
+  const hum180g = audioCtx.createGain();
+  hum180g.gain.value = 0.08;
+  hum180.connect(hum180g);
+  hum180g.connect(humGain);
+  hum180.start();
+
+  // High-frequency CRT whine (15.7kHz — horizontal scan frequency)
+  const whine = audioCtx.createOscillator();
+  whine.type = 'sine';
+  whine.frequency.value = 15734;
+  const whineGain = audioCtx.createGain();
+  whineGain.gain.value = 0.02;
+  whine.connect(whineGain);
+  whineGain.connect(master);
+  whine.start();
+
+  // ── Hard Drive Clicks + Static ──
+  function makeNoiseBurst(duration, attackRatio) {
+    const len = Math.floor(audioCtx.sampleRate * duration);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const env = Math.exp(-i / (len * attackRatio));
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+    return buf;
+  }
+
+  function scheduleClick() {
+    const now = audioCtx.currentTime;
+    const delay = 0.08 + Math.random() * 0.5;
+
+    // Primary click
+    const click = audioCtx.createBufferSource();
+    click.buffer = makeNoiseBurst(0.003, 0.15);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800 + Math.random() * 1200;
+    filter.Q.value = 2 + Math.random() * 4;
+    const clickGain = audioCtx.createGain();
+    clickGain.gain.value = 0.15 + Math.random() * 0.35;
+    click.connect(filter);
+    filter.connect(clickGain);
+    clickGain.connect(master);
+    click.start(now + delay);
+
+    // Double/triple click — rapid succession
+    if (Math.random() > 0.5) {
+      const count = Math.random() > 0.6 ? 2 : 1;
+      for (let c = 0; c < count; c++) {
+        const sub = audioCtx.createBufferSource();
+        sub.buffer = makeNoiseBurst(0.002, 0.1);
+        const sf = audioCtx.createBiquadFilter();
+        sf.type = 'bandpass';
+        sf.frequency.value = 1000 + Math.random() * 1500;
+        sf.Q.value = 3 + Math.random() * 3;
+        const sg = audioCtx.createGain();
+        sg.gain.value = 0.1 + Math.random() * 0.2;
+        sub.connect(sf);
+        sf.connect(sg);
+        sg.connect(master);
+        sub.start(now + delay + 0.015 * (c + 1) + Math.random() * 0.008);
+      }
+    }
+
+    // Seek sound — head movement
+    if (Math.random() > 0.5) {
+      const seek = audioCtx.createBufferSource();
+      seek.buffer = makeNoiseBurst(0.008, 0.3);
+      const seekFilter = audioCtx.createBiquadFilter();
+      seekFilter.type = 'bandpass';
+      seekFilter.frequency.value = 400 + Math.random() * 600;
+      seekFilter.Q.value = 1.5;
+      const seekGain = audioCtx.createGain();
+      seekGain.gain.value = 0.1 + Math.random() * 0.2;
+      seek.connect(seekFilter);
+      seekFilter.connect(seekGain);
+      seekGain.connect(master);
+      seek.start(now + delay + 0.01);
+    }
+
+    // Static crackle — tiny pops of noise
+    if (Math.random() > 0.4) {
+      const crackleCount = 1 + Math.floor(Math.random() * 3);
+      for (let c = 0; c < crackleCount; c++) {
+        const cr = audioCtx.createBufferSource();
+        cr.buffer = makeNoiseBurst(0.001 + Math.random() * 0.002, 0.08);
+        const cf = audioCtx.createBiquadFilter();
+        cf.type = 'highpass';
+        cf.frequency.value = 2000 + Math.random() * 3000;
+        cf.Q.value = 0.5;
+        const cg = audioCtx.createGain();
+        cg.gain.value = 0.05 + Math.random() * 0.12;
+        cr.connect(cf);
+        cf.connect(cg);
+        cg.connect(master);
+        cr.start(now + delay + Math.random() * 0.06);
+      }
+    }
+
+    // Occasional longer static wash
+    if (Math.random() > 0.88) {
+      const wash = audioCtx.createBufferSource();
+      wash.buffer = makeNoiseBurst(0.03 + Math.random() * 0.04, 0.5);
+      const wf = audioCtx.createBiquadFilter();
+      wf.type = 'bandpass';
+      wf.frequency.value = 1500 + Math.random() * 2000;
+      wf.Q.value = 0.8;
+      const wg = audioCtx.createGain();
+      wg.gain.value = 0.04 + Math.random() * 0.06;
+      wash.connect(wf);
+      wf.connect(wg);
+      wg.connect(master);
+      wash.start(now + delay + 0.005);
+    }
+
+    // Schedule next — clusters with pauses
+    let nextDelay;
+    if (Math.random() > 0.82) {
+      nextDelay = 1200 + Math.random() * 2500;
+    } else {
+      nextDelay = 50 + Math.random() * 300;
+    }
+    setTimeout(scheduleClick, nextDelay);
+  }
+
+  // Start clicking after a short delay
+  setTimeout(scheduleClick, 500);
+}
+
+// Browsers require user gesture to start audio
+function initAudioOnce() {
+  startAmbientAudio();
+  document.removeEventListener('click', initAudioOnce);
+  document.removeEventListener('keydown', initAudioOnce);
+}
+document.addEventListener('click', initAudioOnce);
+document.addEventListener('keydown', initAudioOnce);
 </script>
 </body>
 </html>
