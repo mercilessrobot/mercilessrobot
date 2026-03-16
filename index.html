@@ -1043,6 +1043,18 @@ function switchToC64() {
   root.style.setProperty('--bg', '#4040E0');
   root.style.setProperty('--bg-dark', '#4040E0');
   document.body.style.background = '#4040E0';
+  document.body.style.border = '50px solid #A0A1FB';
+
+  // Inset fixed elements to sit inside the border
+  const inset = '50px';
+  document.getElementById('interface').style.inset = inset;
+  document.getElementById('bg-layer').style.inset = inset;
+  document.querySelectorAll('.corner-tl').forEach(el => { el.style.top = '62px'; el.style.left = '62px'; });
+  document.querySelectorAll('.corner-tr').forEach(el => { el.style.top = '62px'; el.style.right = '62px'; });
+  document.querySelectorAll('.corner-bl').forEach(el => { el.style.bottom = '62px'; el.style.left = '62px'; });
+  document.querySelectorAll('.corner-br').forEach(el => { el.style.bottom = '62px'; el.style.right = '62px'; });
+  document.getElementById('status').style.top = '74px';
+  document.getElementById('status').style.right = '82px';
 
   // Update hardcoded amber colors in inline SVG strokes
   document.querySelectorAll('#reticle polyline').forEach(el => {
