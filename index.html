@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERCILESS1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;700&family=Sixtyfour&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --amber: #d4890a;
+  --amber-bright: #e8a020;
+  --amber-dim: #8a5a08;
+  --bg: #1a1a1a;
+  --bg-dark: #141414;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: none;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--amber);
+  font-family: 'Kode Mono', monospace;
+  -webkit-font-smoothing: none;
+}
+
+/* CRT scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.35) 2px,
+    rgba(0, 0, 0, 0.35) 4px
+  );
+}
+
+/* Phosphor scan bar */
+#phosphor-scan {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 80px;
+  z-index: 10001;
+  pointer-events: none;
+  top: -80px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(212, 137, 10, 0.03) 20%,
+    rgba(212, 137, 10, 0.06) 50%,
+    rgba(212, 137, 10, 0.12) 85%,
+    rgba(212, 137, 10, 0.04) 95%,
+    transparent 100%
+  );
+  /* Hard bottom edge bright line */
+  border-bottom: 1px solid rgba(212, 137, 10, 0.15);
+  box-shadow:
+    0 1px 0 rgba(212, 137, 10, 0.08),
+    0 -4px 20px rgba(212, 137, 10, 0.04);
+}
+
+/* Screensaver overlay */
+#screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  background: var(--bg-dark);
+}
+
+#screensaver.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#screensaver canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Subtle vignette */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+}
+
+/* ═══════════════════════════════════════════
+   CROSSHAIR CURSOR
+   ═══════════════════════════════════════════ */
+/* Crosshair lines — split into 4 segments to leave gap for reticle */
+.crosshair-seg {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  background: var(--amber-dim);
+  opacity: 0.6;
+  box-shadow: 0 0 4px rgba(212, 137, 10, 0.3);
+}
+
+/* Horizontal segments */
+#ch-left {
+  height: 1px;
+  left: 0;
+  /* right edge set by JS */
+}
+
+#ch-right {
+  height: 1px;
+  right: 0;
+  /* left edge set by JS */
+}
+
+/* Vertical segments */
+#ch-top {
+  width: 1px;
+  top: 0;
+  /* bottom edge set by JS */
+}
+
+#ch-bottom {
+  width: 1px;
+  bottom: 0;
+  /* top edge set by JS */
+}
+
+/* Reticle target */
+#reticle {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+/* ═══════════════════════════════════════════
+   MAIN INTERFACE
+   ═══════════════════════════════════════════ */
+#interface {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 32px;
+  filter: url(#chromatic);
+}
+
+/* Glass refraction overlay — edge distortion that intensifies at corners */
+#refraction-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  background:
+    /* Corner light refractions */
+    radial-gradient(ellipse at 0% 0%, rgba(255, 80, 20, 0.06) 0%, transparent 35%),
+    radial-gradient(ellipse at 100% 0%, rgba(20, 255, 80, 0.04) 0%, transparent 30%),
+    radial-gradient(ellipse at 0% 100%, rgba(20, 200, 255, 0.04) 0%, transparent 30%),
+    radial-gradient(ellipse at 100% 100%, rgba(255, 80, 20, 0.05) 0%, transparent 35%),
+    /* Edge prismatic bands */
+    linear-gradient(90deg,
+      rgba(255, 40, 10, 0.04) 0%,
+      transparent 3%,
+      transparent 97%,
+      rgba(20, 255, 80, 0.03) 100%),
+    linear-gradient(0deg,
+      rgba(20, 100, 255, 0.03) 0%,
+      transparent 3%,
+      transparent 97%,
+      rgba(255, 60, 20, 0.03) 100%);
+}
+
+/* ═══════════════════════════════════════════
+   HEADER AREA
+   ═══════════════════════════════════════════ */
+#header {
+  position: relative;
+}
+
+.title {
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.8),
+    10px 0 12px rgba(212, 137, 10, 0.15),
+    -10px 0 12px rgba(212, 137, 10, 0.15),
+    20px 0 20px rgba(212, 137, 10, 0.06),
+    -20px 0 20px rgba(212, 137, 10, 0.06),
+    3px 0 0 rgba(255, 60, 20, 0.12),
+    -3px 0 0 rgba(20, 255, 60, 0.08);
+  animation: textFlicker 4s ease-in-out infinite;
+}
+
+.subtitle {
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+  opacity: 0.8;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.7),
+    8px 0 10px rgba(212, 137, 10, 0.12),
+    -8px 0 10px rgba(212, 137, 10, 0.12),
+    2px 0 0 rgba(255, 60, 20, 0.1),
+    -2px 0 0 rgba(20, 255, 60, 0.07);
+}
+
+/* Corner decorations */
+.corner {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  z-index: 5;
+}
+
+.corner-tl {
+  top: 12px;
+  left: 12px;
+  border-top: 1px solid var(--amber-dim);
+  border-left: 1px solid var(--amber-dim);
+}
+
+.corner-tr {
+  top: 12px;
+  right: 12px;
+  border-top: 1px solid var(--amber-dim);
+  border-right: 1px solid var(--amber-dim);
+}
+
+.corner-bl {
+  bottom: 12px;
+  left: 12px;
+  border-bottom: 1px solid var(--amber-dim);
+  border-left: 1px solid var(--amber-dim);
+}
+
+.corner-br {
+  bottom: 12px;
+  right: 12px;
+  border-bottom: 1px solid var(--amber-dim);
+  border-right: 1px solid var(--amber-dim);
+}
+
+/* ═══════════════════════════════════════════
+   OUTPUT AREA
+   ═══════════════════════════════════════════ */
+#output {
+  flex: 1;
+  padding: 40px 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+#output::-webkit-scrollbar {
+  display: none;
+}
+
+.output-line {
+  font-size: 1.4rem;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  animation: lineAppear 0.3s ease forwards;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.6),
+    8px 0 10px rgba(212, 137, 10, 0.1),
+    -8px 0 10px rgba(212, 137, 10, 0.1),
+    2px 0 0 rgba(255, 60, 20, 0.08),
+    -2px 0 0 rgba(20, 255, 60, 0.06);
+}
+
+.output-line.dim {
+  opacity: 0;
+  animation: lineAppearDim 0.3s ease forwards;
+}
+
+@keyframes lineAppear {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 0.9; transform: translateY(0); }
+}
+
+@keyframes lineAppearDim {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 0.5; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   COMMAND INPUT
+   ═══════════════════════════════════════════ */
+#command-area {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.prompt-label {
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.8),
+    10px 0 12px rgba(212, 137, 10, 0.15),
+    -10px 0 12px rgba(212, 137, 10, 0.15),
+    3px 0 0 rgba(255, 60, 20, 0.12),
+    -3px 0 0 rgba(20, 255, 60, 0.08);
+  white-space: nowrap;
+}
+
+#command-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--amber);
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  caret-color: var(--amber);
+  width: 100%;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.8),
+    10px 0 12px rgba(212, 137, 10, 0.15),
+    -10px 0 12px rgba(212, 137, 10, 0.15),
+    3px 0 0 rgba(255, 60, 20, 0.12),
+    -3px 0 0 rgba(20, 255, 60, 0.08);
+}
+
+#command-input::selection {
+  background: rgba(212, 137, 10, 0.3);
+  color: var(--amber-bright);
+}
+
+/* Blinking cursor simulation */
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--amber);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+  box-shadow: 0 0 6px rgba(212, 137, 10, 0.5);
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════
+   FLICKER / GLOW ANIMATIONS
+   ═══════════════════════════════════════════ */
+@keyframes textFlicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.8; }
+  94% { opacity: 1; }
+  96% { opacity: 0.9; }
+  97% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════
+   STATUS BAR (optional top-right info)
+   ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   HELP OVERLAY
+   ═══════════════════════════════════════════ */
+#help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+#help-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#help-content {
+  padding: 0 32px;
+  max-width: 700px;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  line-height: 2;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.8),
+    10px 0 12px rgba(212, 137, 10, 0.15),
+    -10px 0 12px rgba(212, 137, 10, 0.15),
+    3px 0 0 rgba(255, 60, 20, 0.12),
+    -3px 0 0 rgba(20, 255, 60, 0.08);
+}
+
+#help-content .help-list-item {
+  padding-left: 1.5em;
+}
+
+#help-content .help-list-item::before {
+  content: '· ';
+}
+
+#esc-btn {
+  display: inline-block;
+  margin-top: 1.5em;
+  padding: 4px 12px;
+  border: 1px solid var(--amber-dim);
+  color: var(--amber);
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  background: transparent;
+  cursor: none;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.8),
+    10px 0 12px rgba(212, 137, 10, 0.15),
+    -10px 0 12px rgba(212, 137, 10, 0.15);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#esc-btn:hover {
+  border-color: var(--amber);
+  box-shadow: 0 0 8px rgba(212, 137, 10, 0.3);
+}
+
+/* Background layer — wraps interface, corners, status for unified blur */
+#bg-layer {
+  position: fixed;
+  inset: 0;
+  transition: filter 0.5s ease, transform 0.5s ease, opacity 0.5s ease;
+}
+
+#bg-layer.zoomed-out {
+  filter: blur(4px);
+  transform: scale(0.92);
+  opacity: 0.4;
+  transition: filter 0.5s ease, transform 0.5s ease, opacity 0.5s ease;
+}
+
+#status {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  opacity: 0.4;
+  text-align: right;
+  text-shadow: 0 0 6px rgba(212, 137, 10, 0.2);
+}
+</style>
+</head>
+<body>
+
+<!-- SVG Chromatic Aberration Filter -->
+<svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+  <defs>
+    <filter id="chromatic" color-interpolation-filters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
+      <!-- Red channel offset -->
+      <feColorMatrix in="SourceGraphic" type="matrix" result="red"
+        values="1 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 1 0"/>
+      <feOffset in="red" dx="3" dy="1" result="red-shifted"/>
+
+      <!-- Green channel (center, no offset) -->
+      <feColorMatrix in="SourceGraphic" type="matrix" result="green"
+        values="0 0 0 0 0
+                0 1 0 0 0
+                0 0 0 0 0
+                0 0 0 1 0"/>
+
+      <!-- Blue channel offset (opposite direction) -->
+      <feColorMatrix in="SourceGraphic" type="matrix" result="blue"
+        values="0 0 0 0 0
+                0 0 0 0 0
+                0 0 1 0 0
+                0 0 0 1 0"/>
+      <feOffset in="blue" dx="-2" dy="-1" result="blue-shifted"/>
+
+      <!-- Combine channels -->
+      <feBlend in="red-shifted" in2="green" mode="screen" result="rg"/>
+      <feBlend in="rg" in2="blue-shifted" mode="screen" result="rgb"/>
+
+      <!-- Subtle blur for glass feel -->
+      <feGaussianBlur in="rgb" stdDeviation="0.4" result="soft"/>
+
+      <!-- Merge with original for sharpness -->
+      <feMerge>
+        <feMergeNode in="soft"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Screensaver -->
+<div id="screensaver">
+  <canvas id="screensaver-canvas"></canvas>
+</div>
+
+<!-- Phosphor scan bar -->
+<div id="phosphor-scan"></div>
+
+<!-- Glass refraction overlay -->
+<div id="refraction-overlay"></div>
+
+<!-- Crosshair segments (gap around reticle) -->
+<div class="crosshair-seg" id="ch-left"></div>
+<div class="crosshair-seg" id="ch-right"></div>
+<div class="crosshair-seg" id="ch-top"></div>
+<div class="crosshair-seg" id="ch-bottom"></div>
+
+<!-- Reticle target -->
+<svg id="reticle" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Square with cut corners — 4 corner bracket segments -->
+  <!-- Top-left -->
+  <polyline points="6,14 6,6 14,6" stroke="#8a5a08" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <!-- Top-right -->
+  <polyline points="26,6 34,6 34,14" stroke="#8a5a08" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <!-- Bottom-right -->
+  <polyline points="34,26 34,34 26,34" stroke="#8a5a08" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <!-- Bottom-left -->
+  <polyline points="14,34 6,34 6,26" stroke="#8a5a08" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <!-- Glow layer -->
+  <polyline points="6,14 6,6 14,6" stroke="#d4890a" stroke-width="1" fill="none" opacity="0.3" filter="url(#reticle-glow)"/>
+  <polyline points="26,6 34,6 34,14" stroke="#d4890a" stroke-width="1" fill="none" opacity="0.3" filter="url(#reticle-glow)"/>
+  <polyline points="34,26 34,34 26,34" stroke="#d4890a" stroke-width="1" fill="none" opacity="0.3" filter="url(#reticle-glow)"/>
+  <polyline points="14,34 6,34 6,26" stroke="#d4890a" stroke-width="1" fill="none" opacity="0.3" filter="url(#reticle-glow)"/>
+  <!-- Center dot -->
+  <rect x="18.5" y="18.5" width="3" height="3" fill="#8a5a08" opacity="0.6"/>
+  <defs>
+    <filter id="reticle-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Background layer (blurs when help is open) -->
+<div id="bg-layer">
+  <!-- Corner decorations -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- Status -->
+  <div id="status">
+    <div id="status-coords">0000 : 0000</div>
+    <div id="status-time"></div>
+  </div>
+
+  <!-- Main interface -->
+  <div id="interface">
+    <div id="header">
+      <div class="title">MERCILESS1.0</div>
+      <div class="subtitle">TYPE A COMMAND TO BEGIN.</div>
+    </div>
+
+    <div id="output"></div>
+
+    <div id="command-area">
+      <span class="prompt-label">COMMAND&gt;&nbsp;</span>
+      <input type="text" id="command-input" autocomplete="off" spellcheck="false" autofocus>
+    </div>
+  </div>
+</div><!-- end #bg-layer -->
+
+<!-- Help overlay (outside bg-layer so it doesn't blur) -->
+<div id="help-overlay">
+  <div id="help-content">
+    <div>mOS v1.0</div>
+    <div>ROBOT INDUSTRIES</div>
+    <br>
+    <div>AVAILABLE PROGRAMS:</div>
+    <div class="help-list-item">ANALYZE</div>
+    <div class="help-list-item">IDENTIFY</div>
+    <div class="help-list-item">PENITENCE</div>
+    <div class="help-list-item">ABSOLVE</div>
+    <div class="help-list-item">EDICTS</div>
+    <br>
+    <div>TYPE A PROGRAM NAME TO LAUNCH IT</div>
+    <br>
+    <button id="esc-btn">ESC</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CROSSHAIR TRACKING
+   ═══════════════════════════════════════════ */
+const chLeft = document.getElementById('ch-left');
+const chRight = document.getElementById('ch-right');
+const chTop = document.getElementById('ch-top');
+const chBottom = document.getElementById('ch-bottom');
+const reticle = document.getElementById('reticle');
+const statusCoords = document.getElementById('status-coords');
+
+const GAP = 24; // gap radius around reticle center
+
+document.addEventListener('mousemove', (e) => {
+  const mx = e.clientX;
+  const my = e.clientY;
+
+  // Horizontal segments
+  chLeft.style.top = my + 'px';
+  chLeft.style.width = Math.max(0, mx - GAP) + 'px';
+
+  chRight.style.top = my + 'px';
+  chRight.style.left = (mx + GAP) + 'px';
+  chRight.style.width = Math.max(0, window.innerWidth - mx - GAP) + 'px';
+
+  // Vertical segments
+  chTop.style.left = mx + 'px';
+  chTop.style.height = Math.max(0, my - GAP) + 'px';
+
+  chBottom.style.left = mx + 'px';
+  chBottom.style.top = (my + GAP) + 'px';
+  chBottom.style.height = Math.max(0, window.innerHeight - my - GAP) + 'px';
+
+  // Reticle
+  reticle.style.top = my + 'px';
+  reticle.style.left = mx + 'px';
+
+  const x = String(Math.round(mx)).padStart(4, '0');
+  const y = String(Math.round(my)).padStart(4, '0');
+  statusCoords.textContent = x + ' : ' + y;
+});
+
+/* ═══════════════════════════════════════════
+   STATUS CLOCK
+   ═══════════════════════════════════════════ */
+const statusTime = document.getElementById('status-time');
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  statusTime.textContent = h + ':' + m + ':' + s;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ═══════════════════════════════════════════
+   COMMAND SYSTEM
+   ═══════════════════════════════════════════ */
+const input = document.getElementById('command-input');
+const output = document.getElementById('output');
+
+const helpOverlay = document.getElementById('help-overlay');
+const escBtn = document.getElementById('esc-btn');
+const bgLayer = document.getElementById('bg-layer');
+
+function showHelp() {
+  helpOverlay.classList.add('active');
+  bgLayer.classList.add('zoomed-out');
+  input.disabled = true;
+  input.blur();
+}
+
+function hideHelp() {
+  helpOverlay.classList.remove('active');
+  bgLayer.classList.remove('zoomed-out');
+  input.disabled = false;
+  input.focus();
+}
+
+escBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  hideHelp();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && helpOverlay.classList.contains('active')) {
+    hideHelp();
+  }
+});
+
+const commands = {
+  help: () => {
+    showHelp();
+    return [];
+  },
+
+  status: () => {
+    const uptime = Math.floor((Date.now() - startTime) / 1000);
+    const h = Math.floor(uptime / 3600);
+    const m = Math.floor((uptime % 3600) / 60);
+    const s = uptime % 60;
+    return [
+      'SYSTEM STATUS:',
+      '',
+      '  CORE STATUS     — ONLINE',
+      '  MEMORY          — 84.2% AVAILABLE',
+      '  NETWORK         — CONNECTED',
+      '  THREAT LEVEL    — LOW',
+      `  UPTIME          — ${h}H ${m}M ${s}S`,
+      '  BUILD           — 1.0.7734',
+    ];
+  },
+
+  scan: () => {
+    const lines = [
+      'INITIATING ENVIRONMENT SCAN...',
+    ];
+    setTimeout(() => addLines(['SCANNING SECTOR 01... OK']), 600);
+    setTimeout(() => addLines(['SCANNING SECTOR 02... OK']), 1200);
+    setTimeout(() => addLines(['SCANNING SECTOR 03... OK']), 1800);
+    setTimeout(() => addLines(['SCANNING SECTOR 04... ANOMALY DETECTED']), 2400);
+    setTimeout(() => addLines(['', 'SCAN COMPLETE. 1 ANOMALY FOUND IN SECTOR 04.', 'USE "MAP" TO VIEW SECTOR LAYOUT.']), 3200);
+    return lines;
+  },
+
+  map: () => [
+    'SECTOR MAP:',
+    '',
+    '  ┌─────────┬─────────┐',
+    '  │         │         │',
+    '  │  SEC 01 │  SEC 02 │',
+    '  │   [OK]  │   [OK]  │',
+    '  │         │         │',
+    '  ├─────────┼─────────┤',
+    '  │         │         │',
+    '  │  SEC 03 │  SEC 04 │',
+    '  │   [OK]  │  [WARN] │',
+    '  │         │         │',
+    '  └─────────┴─────────┘',
+  ],
+
+  log: () => [
+    'SYSTEM LOG (LAST 5 ENTRIES):',
+    '',
+    '  [03.16.26 08:00:12] SYSTEM BOOT INITIATED',
+    '  [03.16.26 08:00:14] CORE MODULES LOADED',
+    '  [03.16.26 08:00:15] NETWORK INTERFACE UP',
+    '  [03.16.26 08:00:16] MERCILESS1.0 READY',
+    '  [03.16.26 08:01:03] USER SESSION STARTED',
+  ],
+
+  clear: () => {
+    output.innerHTML = '';
+    return [];
+  },
+
+  ping: () => {
+    const lines = ['PINGING CENTRAL NODE...'];
+    setTimeout(() => addLines(['  REPLY FROM 10.0.0.1 — TIME=12MS']), 400);
+    setTimeout(() => addLines(['  REPLY FROM 10.0.0.1 — TIME=14MS']), 800);
+    setTimeout(() => addLines(['  REPLY FROM 10.0.0.1 — TIME=11MS']), 1200);
+    setTimeout(() => addLines(['', '3 PACKETS SENT, 3 RECEIVED. AVG=12MS']), 1800);
+    return lines;
+  },
+
+  about: () => [
+    'MERCILESS1.0',
+    '',
+    '  EXPERIMENTAL COMMAND INTERFACE',
+    '  VERSION 1.0 BUILD 7734',
+    '  CLASSIFICATION: UNRESTRICTED',
+    '',
+    '  DESIGNED FOR DEPTH AND PRECISION.',
+  ],
+
+  date: () => {
+    const now = new Date();
+    return [
+      `CURRENT DATE/TIME: ${now.toISOString().replace('T', ' ').slice(0, 19)}`,
+    ];
+  },
+};
+
+const startTime = Date.now();
+
+function addLines(lines, dim = false) {
+  lines.forEach((line, i) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'output-line' + (dim ? ' dim' : '');
+      div.textContent = line || '\u00A0';
+      output.appendChild(div);
+      output.scrollTop = output.scrollHeight;
+    }, i * 40);
+  });
+}
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const cmd = input.value.trim().toLowerCase();
+    input.value = '';
+
+    // Echo the command
+    addLines(['> ' + cmd.toUpperCase()], true);
+
+    if (cmd === '') return;
+
+    // C64 easter egg
+    if (cmd === 'load "*",8,1') {
+      switchToC64();
+      return;
+    }
+
+    setTimeout(() => {
+      if (commands[cmd]) {
+        const result = commands[cmd]();
+        if (result.length > 0) {
+          addLines(result);
+        }
+      } else {
+        addLines([`UNKNOWN COMMAND: "${cmd.toUpperCase()}"`, 'TYPE "HELP" FOR AVAILABLE COMMANDS.']);
+      }
+      // Add blank line after output
+      setTimeout(() => addLines(['']), 200);
+    }, 150);
+  }
+});
+
+// Keep focus on input (unless help is open)
+document.addEventListener('click', () => {
+  if (!helpOverlay.classList.contains('active')) {
+    input.focus();
+  }
+});
+input.focus();
+
+/* ═══════════════════════════════════════════
+   PHOSPHOR SCAN SWEEP
+   ═══════════════════════════════════════════ */
+const phosphor = document.getElementById('phosphor-scan');
+let scanRunning = false;
+
+function runPhosphorScan() {
+  if (scanRunning) return;
+  scanRunning = true;
+
+  const duration = 6000 + Math.random() * 3000; // 6-9s sweep
+  const vh = window.innerHeight;
+  const start = performance.now();
+
+  function animate(now) {
+    const elapsed = now - start;
+    const progress = elapsed / duration;
+
+    if (progress >= 1) {
+      phosphor.style.top = '-80px';
+      phosphor.style.opacity = '0';
+      scanRunning = false;
+      scheduleNextScan();
+      return;
+    }
+
+    // Ease — slightly faster in the middle
+    const y = -80 + (vh + 80) * progress;
+    // Fade in at start, fade out at end
+    const fade = progress < 0.05 ? progress / 0.05
+               : progress > 0.9 ? (1 - progress) / 0.1
+               : 1;
+
+    phosphor.style.top = y + 'px';
+    phosphor.style.opacity = fade;
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function scheduleNextScan() {
+  const delay = 4000 + Math.random() * 8000; // 4-12s between scans
+  setTimeout(runPhosphorScan, delay);
+}
+
+// Start the first scan after a short delay
+setTimeout(runPhosphorScan, 2000);
+
+/* ═══════════════════════════════════════════
+   C64 THEME SWITCH
+   ═══════════════════════════════════════════ */
+function switchToC64() {
+  const root = document.documentElement;
+  root.style.setProperty('--amber', '#A0A1FB');
+  root.style.setProperty('--amber-bright', '#B8B9FF');
+  root.style.setProperty('--amber-dim', '#7071C0');
+  root.style.setProperty('--bg', '#4040E0');
+  root.style.setProperty('--bg-dark', '#4040E0');
+  document.body.style.background = '#4040E0';
+
+  // Update hardcoded amber colors in inline SVG strokes
+  document.querySelectorAll('#reticle polyline').forEach(el => {
+    const stroke = el.getAttribute('stroke');
+    if (stroke === '#8a5a08') el.setAttribute('stroke', '#7071C0');
+    if (stroke === '#d4890a') el.setAttribute('stroke', '#A0A1FB');
+  });
+  document.querySelectorAll('#reticle rect').forEach(el => {
+    if (el.getAttribute('fill') === '#8a5a08') el.setAttribute('fill', '#7071C0');
+  });
+
+  // Switch font
+  document.body.style.fontFamily = "'Sixtyfour', monospace";
+  document.getElementById('command-input').style.fontFamily = "'Sixtyfour', monospace";
+
+  // Update screensaver canvas colors
+  window._c64Mode = true;
+
+  addLines(['', 'READY.'], false);
+}
+
+/* ═══════════════════════════════════════════
+   SCREENSAVER — BOUNCING BALL WITH TRAIL
+   ═══════════════════════════════════════════ */
+const screensaver = document.getElementById('screensaver');
+const ssCanvas = document.getElementById('screensaver-canvas');
+const ssCtx = ssCanvas.getContext('2d');
+let ssActive = false;
+let ssRaf = null;
+let idleTimer = null;
+const IDLE_TIMEOUT = 60000;
+
+// Triangle state
+const tri = {
+  x: 0, y: 0,
+  vx: 2.5, vy: 1.8,
+  size: 250,
+  rotX: 0, rotY: 0, rotZ: 0,
+  spinX: 0.012, spinY: 0.018, spinZ: 0.008,
+  trail: [] // stores past projected vertex snapshots
+};
+
+// 3D tetrahedron vertices (equilateral triangle base + apex)
+const tetraVerts = [
+  [0, -1, 0],
+  [-0.866, 0.5, -0.5],
+  [0.866, 0.5, -0.5],
+  [0, 0.5, 1]
+];
+const tetraEdges = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+
+function rotatePoint(p, rx, ry, rz) {
+  let [x, y, z] = p;
+  // Rotate X
+  let y1 = y * Math.cos(rx) - z * Math.sin(rx);
+  let z1 = y * Math.sin(rx) + z * Math.cos(rx);
+  // Rotate Y
+  let x2 = x * Math.cos(ry) + z1 * Math.sin(ry);
+  let z2 = -x * Math.sin(ry) + z1 * Math.cos(ry);
+  // Rotate Z
+  let x3 = x2 * Math.cos(rz) - y1 * Math.sin(rz);
+  let y3 = x2 * Math.sin(rz) + y1 * Math.cos(rz);
+  return [x3, y3, z2];
+}
+
+function projectVerts() {
+  return tetraVerts.map(v => {
+    const r = rotatePoint(v, tri.rotX, tri.rotY, tri.rotZ);
+    return [r[0] * tri.size + tri.x, r[1] * tri.size + tri.y];
+  });
+}
+
+function resizeCanvas() {
+  ssCanvas.width = window.innerWidth * devicePixelRatio;
+  ssCanvas.height = window.innerHeight * devicePixelRatio;
+  ssCtx.scale(devicePixelRatio, devicePixelRatio);
+}
+
+function hideReticle() {
+  chLeft.style.display = 'none';
+  chRight.style.display = 'none';
+  chTop.style.display = 'none';
+  chBottom.style.display = 'none';
+  reticle.style.display = 'none';
+}
+
+function showReticle() {
+  chLeft.style.display = '';
+  chRight.style.display = '';
+  chTop.style.display = '';
+  chBottom.style.display = '';
+  reticle.style.display = '';
+}
+
+function startScreensaver() {
+  if (ssActive) return;
+  ssActive = true;
+  resizeCanvas();
+  tri.x = Math.random() * (window.innerWidth - 120) + 60;
+  tri.y = Math.random() * (window.innerHeight - 120) + 60;
+  tri.vx = (1.5 + Math.random()) * (Math.random() > 0.5 ? 1 : -1);
+  tri.vy = (1.5 + Math.random()) * (Math.random() > 0.5 ? 1 : -1);
+  tri.rotX = Math.random() * Math.PI * 2;
+  tri.rotY = Math.random() * Math.PI * 2;
+  tri.rotZ = Math.random() * Math.PI * 2;
+  tri.trail = [];
+  hideReticle();
+  screensaver.classList.add('active');
+  ssRaf = requestAnimationFrame(animateScreensaver);
+}
+
+function stopScreensaver() {
+  if (!ssActive) return;
+  ssActive = false;
+  screensaver.classList.remove('active');
+  showReticle();
+  if (ssRaf) cancelAnimationFrame(ssRaf);
+  resetIdleTimer();
+  input.focus();
+}
+
+function themeRGBA(alpha) {
+  return window._c64Mode
+    ? `rgba(160, 161, 251, ${alpha})`
+    : `rgba(212, 137, 10, ${alpha})`;
+}
+
+function themeSolid() {
+  return window._c64Mode ? '#A0A1FB' : '#e8a020';
+}
+
+function drawWireframe(verts, alpha, lineWidth, ctx) {
+  ctx.strokeStyle = themeRGBA(alpha);
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for (const [a, b] of tetraEdges) {
+    ctx.beginPath();
+    ctx.moveTo(verts[a][0], verts[a][1]);
+    ctx.lineTo(verts[b][0], verts[b][1]);
+    ctx.stroke();
+  }
+}
+
+function animateScreensaver() {
+  if (!ssActive) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const s = tri.size;
+
+  // Move
+  tri.x += tri.vx;
+  tri.y += tri.vy;
+
+  // Bounce
+  if (tri.x - s <= 0) { tri.x = s; tri.vx = Math.abs(tri.vx); }
+  if (tri.x + s >= w) { tri.x = w - s; tri.vx = -Math.abs(tri.vx); }
+  if (tri.y - s <= 0) { tri.y = s; tri.vy = Math.abs(tri.vy); }
+  if (tri.y + s >= h) { tri.y = h - s; tri.vy = -Math.abs(tri.vy); }
+
+  // Rotate
+  tri.rotX += tri.spinX;
+  tri.rotY += tri.spinY;
+  tri.rotZ += tri.spinZ;
+
+  // Project current vertices
+  const verts = projectVerts();
+
+  // Record trail snapshot
+  tri.trail.push(verts.map(v => [v[0], v[1]]));
+  if (tri.trail.length > 200) tri.trail.shift();
+
+  // Draw
+  ssCtx.clearRect(0, 0, w, h);
+
+  // Draw trail — fading ghost wireframes
+  for (let i = 0; i < tri.trail.length; i++) {
+    const alpha = (i / tri.trail.length) * 0.3;
+    const lw = (i / tri.trail.length) * 1.5;
+    drawWireframe(tri.trail[i], alpha, lw, ssCtx);
+  }
+
+  // Trail glow layer
+  ssCtx.save();
+  ssCtx.filter = 'blur(6px)';
+  for (let i = 0; i < tri.trail.length; i++) {
+    const alpha = (i / tri.trail.length) * 0.12;
+    drawWireframe(tri.trail[i], alpha, 4, ssCtx);
+  }
+  ssCtx.restore();
+
+  // Draw current wireframe
+  drawWireframe(verts, 0.9, 2, ssCtx);
+
+  // Bright glow on current
+  ssCtx.save();
+  ssCtx.filter = 'blur(4px)';
+  drawWireframe(verts, 0.4, 6, ssCtx);
+  ssCtx.restore();
+
+  // Vertex dots
+  for (const v of verts) {
+    ssCtx.beginPath();
+    ssCtx.arc(v[0], v[1], 2.5, 0, Math.PI * 2);
+    ssCtx.fillStyle = themeSolid();
+    ssCtx.fill();
+  }
+
+  ssRaf = requestAnimationFrame(animateScreensaver);
+}
+
+// Idle detection
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(startScreensaver, IDLE_TIMEOUT);
+}
+
+// Any activity dismisses screensaver and resets timer
+function onActivity() {
+  if (ssActive) {
+    stopScreensaver();
+  } else {
+    resetIdleTimer();
+  }
+}
+
+document.addEventListener('mousemove', onActivity);
+document.addEventListener('keydown', onActivity);
+window.addEventListener('resize', () => { if (ssActive) resizeCanvas(); });
+
+// Start idle timer
+resetIdleTimer();
+</script>
+</body>
+</html>
