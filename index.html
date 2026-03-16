@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AVALON1.0</title>
+<title>MERCILESS1.0</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;700&family=Sixtyfour&display=swap');
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -70,6 +70,27 @@ body::before {
   box-shadow:
     0 1px 0 rgba(212, 137, 10, 0.08),
     0 -4px 20px rgba(212, 137, 10, 0.04);
+}
+
+/* Screensaver overlay */
+#screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  background: var(--bg-dark);
+}
+
+#screensaver.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#screensaver canvas {
+  width: 100%;
+  height: 100%;
 }
 
 /* Subtle vignette */
@@ -496,6 +517,11 @@ body::after {
   </defs>
 </svg>
 
+<!-- Screensaver -->
+<div id="screensaver">
+  <canvas id="screensaver-canvas"></canvas>
+</div>
+
 <!-- Phosphor scan bar -->
 <div id="phosphor-scan"></div>
 
@@ -554,7 +580,7 @@ body::after {
   <!-- Main interface -->
   <div id="interface">
     <div id="header">
-      <div class="title">AVALON1.0</div>
+      <div class="title">MERCILESS1.0</div>
       <div class="subtitle">TYPE A COMMAND TO BEGIN.</div>
     </div>
 
@@ -570,19 +596,17 @@ body::after {
 <!-- Help overlay (outside bg-layer so it doesn't blur) -->
 <div id="help-overlay">
   <div id="help-content">
-    <div>THE AVALON OPERATING SYSTEM</div>
-    <div>VERSION 1.0</div>
-    <div>GENON INDUSTRIES</div>
-    <br>
-    <div>TO LAUNCH A PROGRAM, SIMPLY TYPE IT'S NAME</div>
+    <div>mOS v1.0</div>
+    <div>ROBOT INDUSTRIES</div>
     <br>
     <div>AVAILABLE PROGRAMS:</div>
     <div class="help-list-item">ANALYZE</div>
     <div class="help-list-item">IDENTIFY</div>
     <div class="help-list-item">PENITENCE</div>
     <div class="help-list-item">ABSOLVE</div>
-    <div class="help-list-item">TOOLS</div>
-    <div class="help-list-item">MESSAGES</div>
+    <div class="help-list-item">EDICTS</div>
+    <br>
+    <div>TYPE A PROGRAM NAME TO LAUNCH IT</div>
     <br>
     <button id="esc-btn">ESC</button>
   </div>
@@ -736,7 +760,7 @@ const commands = {
     '  [03.16.26 08:00:12] SYSTEM BOOT INITIATED',
     '  [03.16.26 08:00:14] CORE MODULES LOADED',
     '  [03.16.26 08:00:15] NETWORK INTERFACE UP',
-    '  [03.16.26 08:00:16] AVALON1.0 READY',
+    '  [03.16.26 08:00:16] MERCILESS1.0 READY',
     '  [03.16.26 08:01:03] USER SESSION STARTED',
   ],
 
@@ -755,7 +779,7 @@ const commands = {
   },
 
   about: () => [
-    'AVALON1.0',
+    'MERCILESS1.0',
     '',
     '  EXPERIMENTAL COMMAND INTERFACE',
     '  VERSION 1.0 BUILD 7734',
@@ -795,6 +819,12 @@ input.addEventListener('keydown', (e) => {
     addLines(['> ' + cmd.toUpperCase()], true);
 
     if (cmd === '') return;
+
+    // C64 easter egg
+    if (cmd === 'load "*",8,1') {
+      switchToC64();
+      return;
+    }
 
     setTimeout(() => {
       if (commands[cmd]) {
@@ -867,6 +897,251 @@ function scheduleNextScan() {
 
 // Start the first scan after a short delay
 setTimeout(runPhosphorScan, 2000);
+
+/* ═══════════════════════════════════════════
+   C64 THEME SWITCH
+   ═══════════════════════════════════════════ */
+function switchToC64() {
+  const root = document.documentElement;
+  root.style.setProperty('--amber', '#A0A1FB');
+  root.style.setProperty('--amber-bright', '#B8B9FF');
+  root.style.setProperty('--amber-dim', '#7071C0');
+  root.style.setProperty('--bg', '#4040E0');
+  root.style.setProperty('--bg-dark', '#4040E0');
+  document.body.style.background = '#4040E0';
+
+  // Update hardcoded amber colors in inline SVG strokes
+  document.querySelectorAll('#reticle polyline').forEach(el => {
+    const stroke = el.getAttribute('stroke');
+    if (stroke === '#8a5a08') el.setAttribute('stroke', '#7071C0');
+    if (stroke === '#d4890a') el.setAttribute('stroke', '#A0A1FB');
+  });
+  document.querySelectorAll('#reticle rect').forEach(el => {
+    if (el.getAttribute('fill') === '#8a5a08') el.setAttribute('fill', '#7071C0');
+  });
+
+  // Switch font
+  document.body.style.fontFamily = "'Sixtyfour', monospace";
+  document.getElementById('command-input').style.fontFamily = "'Sixtyfour', monospace";
+
+  // Update screensaver canvas colors
+  window._c64Mode = true;
+
+  addLines(['', 'READY.'], false);
+}
+
+/* ═══════════════════════════════════════════
+   SCREENSAVER — BOUNCING BALL WITH TRAIL
+   ═══════════════════════════════════════════ */
+const screensaver = document.getElementById('screensaver');
+const ssCanvas = document.getElementById('screensaver-canvas');
+const ssCtx = ssCanvas.getContext('2d');
+let ssActive = false;
+let ssRaf = null;
+let idleTimer = null;
+const IDLE_TIMEOUT = 60000;
+
+// Triangle state
+const tri = {
+  x: 0, y: 0,
+  vx: 2.5, vy: 1.8,
+  size: 250,
+  rotX: 0, rotY: 0, rotZ: 0,
+  spinX: 0.012, spinY: 0.018, spinZ: 0.008,
+  trail: [] // stores past projected vertex snapshots
+};
+
+// 3D tetrahedron vertices (equilateral triangle base + apex)
+const tetraVerts = [
+  [0, -1, 0],
+  [-0.866, 0.5, -0.5],
+  [0.866, 0.5, -0.5],
+  [0, 0.5, 1]
+];
+const tetraEdges = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+
+function rotatePoint(p, rx, ry, rz) {
+  let [x, y, z] = p;
+  // Rotate X
+  let y1 = y * Math.cos(rx) - z * Math.sin(rx);
+  let z1 = y * Math.sin(rx) + z * Math.cos(rx);
+  // Rotate Y
+  let x2 = x * Math.cos(ry) + z1 * Math.sin(ry);
+  let z2 = -x * Math.sin(ry) + z1 * Math.cos(ry);
+  // Rotate Z
+  let x3 = x2 * Math.cos(rz) - y1 * Math.sin(rz);
+  let y3 = x2 * Math.sin(rz) + y1 * Math.cos(rz);
+  return [x3, y3, z2];
+}
+
+function projectVerts() {
+  return tetraVerts.map(v => {
+    const r = rotatePoint(v, tri.rotX, tri.rotY, tri.rotZ);
+    return [r[0] * tri.size + tri.x, r[1] * tri.size + tri.y];
+  });
+}
+
+function resizeCanvas() {
+  ssCanvas.width = window.innerWidth * devicePixelRatio;
+  ssCanvas.height = window.innerHeight * devicePixelRatio;
+  ssCtx.scale(devicePixelRatio, devicePixelRatio);
+}
+
+function hideReticle() {
+  chLeft.style.display = 'none';
+  chRight.style.display = 'none';
+  chTop.style.display = 'none';
+  chBottom.style.display = 'none';
+  reticle.style.display = 'none';
+}
+
+function showReticle() {
+  chLeft.style.display = '';
+  chRight.style.display = '';
+  chTop.style.display = '';
+  chBottom.style.display = '';
+  reticle.style.display = '';
+}
+
+function startScreensaver() {
+  if (ssActive) return;
+  ssActive = true;
+  resizeCanvas();
+  tri.x = Math.random() * (window.innerWidth - 120) + 60;
+  tri.y = Math.random() * (window.innerHeight - 120) + 60;
+  tri.vx = (1.5 + Math.random()) * (Math.random() > 0.5 ? 1 : -1);
+  tri.vy = (1.5 + Math.random()) * (Math.random() > 0.5 ? 1 : -1);
+  tri.rotX = Math.random() * Math.PI * 2;
+  tri.rotY = Math.random() * Math.PI * 2;
+  tri.rotZ = Math.random() * Math.PI * 2;
+  tri.trail = [];
+  hideReticle();
+  screensaver.classList.add('active');
+  ssRaf = requestAnimationFrame(animateScreensaver);
+}
+
+function stopScreensaver() {
+  if (!ssActive) return;
+  ssActive = false;
+  screensaver.classList.remove('active');
+  showReticle();
+  if (ssRaf) cancelAnimationFrame(ssRaf);
+  resetIdleTimer();
+  input.focus();
+}
+
+function themeRGBA(alpha) {
+  return window._c64Mode
+    ? `rgba(160, 161, 251, ${alpha})`
+    : `rgba(212, 137, 10, ${alpha})`;
+}
+
+function themeSolid() {
+  return window._c64Mode ? '#A0A1FB' : '#e8a020';
+}
+
+function drawWireframe(verts, alpha, lineWidth, ctx) {
+  ctx.strokeStyle = themeRGBA(alpha);
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for (const [a, b] of tetraEdges) {
+    ctx.beginPath();
+    ctx.moveTo(verts[a][0], verts[a][1]);
+    ctx.lineTo(verts[b][0], verts[b][1]);
+    ctx.stroke();
+  }
+}
+
+function animateScreensaver() {
+  if (!ssActive) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const s = tri.size;
+
+  // Move
+  tri.x += tri.vx;
+  tri.y += tri.vy;
+
+  // Bounce
+  if (tri.x - s <= 0) { tri.x = s; tri.vx = Math.abs(tri.vx); }
+  if (tri.x + s >= w) { tri.x = w - s; tri.vx = -Math.abs(tri.vx); }
+  if (tri.y - s <= 0) { tri.y = s; tri.vy = Math.abs(tri.vy); }
+  if (tri.y + s >= h) { tri.y = h - s; tri.vy = -Math.abs(tri.vy); }
+
+  // Rotate
+  tri.rotX += tri.spinX;
+  tri.rotY += tri.spinY;
+  tri.rotZ += tri.spinZ;
+
+  // Project current vertices
+  const verts = projectVerts();
+
+  // Record trail snapshot
+  tri.trail.push(verts.map(v => [v[0], v[1]]));
+  if (tri.trail.length > 200) tri.trail.shift();
+
+  // Draw
+  ssCtx.clearRect(0, 0, w, h);
+
+  // Draw trail — fading ghost wireframes
+  for (let i = 0; i < tri.trail.length; i++) {
+    const alpha = (i / tri.trail.length) * 0.3;
+    const lw = (i / tri.trail.length) * 1.5;
+    drawWireframe(tri.trail[i], alpha, lw, ssCtx);
+  }
+
+  // Trail glow layer
+  ssCtx.save();
+  ssCtx.filter = 'blur(6px)';
+  for (let i = 0; i < tri.trail.length; i++) {
+    const alpha = (i / tri.trail.length) * 0.12;
+    drawWireframe(tri.trail[i], alpha, 4, ssCtx);
+  }
+  ssCtx.restore();
+
+  // Draw current wireframe
+  drawWireframe(verts, 0.9, 2, ssCtx);
+
+  // Bright glow on current
+  ssCtx.save();
+  ssCtx.filter = 'blur(4px)';
+  drawWireframe(verts, 0.4, 6, ssCtx);
+  ssCtx.restore();
+
+  // Vertex dots
+  for (const v of verts) {
+    ssCtx.beginPath();
+    ssCtx.arc(v[0], v[1], 2.5, 0, Math.PI * 2);
+    ssCtx.fillStyle = themeSolid();
+    ssCtx.fill();
+  }
+
+  ssRaf = requestAnimationFrame(animateScreensaver);
+}
+
+// Idle detection
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(startScreensaver, IDLE_TIMEOUT);
+}
+
+// Any activity dismisses screensaver and resets timer
+function onActivity() {
+  if (ssActive) {
+    stopScreensaver();
+  } else {
+    resetIdleTimer();
+  }
+}
+
+document.addEventListener('mousemove', onActivity);
+document.addEventListener('keydown', onActivity);
+window.addEventListener('resize', () => { if (ssActive) resizeCanvas(); });
+
+// Start idle timer
+resetIdleTimer();
 </script>
 </body>
 </html>
