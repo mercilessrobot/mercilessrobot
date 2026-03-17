@@ -872,6 +872,7 @@ function showOverlay(id) {
   if (activeOverlay) hideOverlay();
   const el = document.getElementById(id);
   if (!el) return;
+
   activeOverlay = el;
   el.classList.add('active');
   bgLayer.classList.add('zoomed-out');
@@ -1452,9 +1453,15 @@ input.addEventListener('keydown', (e) => {
   }
 });
 
-// Keep focus on input (unless help is open)
+// Keep focus on input whenever no overlay is active
 document.addEventListener('click', () => {
-  if (!helpOverlay.classList.contains('active')) {
+  if (!activeOverlay) {
+    input.focus();
+  }
+});
+// Redirect any typing to input when no overlay is active
+document.addEventListener('keydown', (e) => {
+  if (!activeOverlay && document.activeElement !== input && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
     input.focus();
   }
 });
@@ -1495,6 +1502,8 @@ function runPhosphorScan() {
 
     phosphor.style.top = y + 'px';
     phosphor.style.opacity = fade;
+
+    // Screen distortion around the phosphor bar
     requestAnimationFrame(animate);
   }
 
@@ -1820,6 +1829,34 @@ function startAmbientAudio() {
   hum180.connect(hum180g);
   hum180g.connect(humGain);
   hum180.start();
+
+  // Reticle-reactive hum: vertical = pitch, horizontal = LFO wobble rate
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.type = 'sine';
+  lfo.frequency.value = 0;
+  lfoGain.gain.value = 0;
+  lfo.connect(lfoGain);
+  lfoGain.connect(humGain.gain);
+  lfo.start();
+
+  document.addEventListener('mousemove', (e) => {
+    if (!audioCtx || !soundEnabled) return;
+    const normY = e.clientY / window.innerHeight;
+    const normX = e.clientX / window.innerWidth;
+
+    // Pitch: 50Hz (bottom) to 80Hz (top)
+    const freq = 80 - normY * 30;
+    hum60.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
+    hum120.frequency.setTargetAtTime(freq * 2, audioCtx.currentTime, 0.1);
+    hum180.frequency.setTargetAtTime(freq * 3, audioCtx.currentTime, 0.1);
+
+    // Horizontal: LFO rate 0 (left) to 12Hz (right) for "wub wub" wobble
+    const lfoRate = normX * 12;
+    const lfoDepth = normX * 0.3; // deeper wobble toward right
+    lfo.frequency.setTargetAtTime(lfoRate, audioCtx.currentTime, 0.1);
+    lfoGain.gain.setTargetAtTime(lfoDepth, audioCtx.currentTime, 0.1);
+  });
 
   // High-frequency CRT whine (15.7kHz — horizontal scan frequency)
   const whine = audioCtx.createOscillator();
