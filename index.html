@@ -386,6 +386,135 @@ body::after {
    STATUS BAR (optional top-right info)
    ═══════════════════════════════════════════ */
 /* ═══════════════════════════════════════════
+   BEAT SEQUENCER (ABSOLVE)
+   ═══════════════════════════════════════════ */
+.seq-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: fit-content;
+}
+
+.seq-controls {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  margin-left: 88px;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  gap: 6px;
+}
+
+.seq-controls .seq-ctrl-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 118px;
+}
+
+.seq-controls .seq-ctrl-group .seq-ctrl-label {
+  font-size: 1.1rem;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.seq-controls .seq-ctrl-spacer {
+  width: 118px;
+}
+
+.seq-controls input[type="text"] {
+  background: var(--bg);
+  border: 1px solid var(--amber-dim);
+  color: var(--amber);
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.4rem;
+  width: 100%;
+  padding: 4px 8px;
+  text-align: center;
+  cursor: none;
+  box-sizing: border-box;
+}
+
+.seq-controls button {
+  background: transparent;
+  border: 1px solid var(--amber-dim);
+  color: var(--amber);
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.4rem;
+  padding: 4px 16px;
+  cursor: none;
+  letter-spacing: 0.1em;
+  width: 100%;
+}
+
+.seq-controls button:hover,
+.seq-controls button.seq-active {
+  background: rgba(212, 137, 10, 0.2);
+}
+
+.seq-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.seq-label {
+  width: 80px;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-align: right;
+  padding-right: 8px;
+  opacity: 0.6;
+}
+
+.seq-cell {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--amber-dim);
+  cursor: none;
+  transition: background 0.05s;
+}
+
+.seq-cell:hover {
+  border-color: var(--amber);
+}
+
+.seq-cell.on {
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(212, 137, 10, 0.5);
+}
+
+.seq-cell.current {
+  border-color: var(--amber-bright);
+  box-shadow: 0 0 8px rgba(212, 137, 10, 0.6);
+}
+
+.seq-cell.on.current {
+  background: var(--amber-bright);
+  box-shadow: 0 0 12px rgba(212, 137, 10, 0.8);
+}
+
+.seq-playhead {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.seq-ph-cell {
+  width: 56px;
+  height: 12px;
+  border: 1px solid var(--amber-dim);
+  opacity: 0.3;
+}
+
+.seq-ph-cell.current {
+  background: var(--amber);
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(212, 137, 10, 0.5);
+}
+
+/* ═══════════════════════════════════════════
    HELP OVERLAY
    ═══════════════════════════════════════════ */
 .overlay-panel {
@@ -784,6 +913,28 @@ body::after {
 </div>
 
 
+<!-- Absolve (beat sequencer) overlay -->
+<div id="absolve-overlay" class="overlay-panel">
+  <div class="overlay-content" style="max-width:none;line-height:1.4;">
+    <div>ABSOLVE</div>
+    <br>
+    <div class="seq-controls">
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">TEMPO</div><input type="text" id="seq-tempo" value="120"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">ATTACK</div><input type="text" id="seq-attack" value="0.01"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">DECAY</div><input type="text" id="seq-decay-ctrl" value="0.1"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">SUSTAIN</div><input type="text" id="seq-sustain" value="0.3"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">RELEASE</div><input type="text" id="seq-release" value="0.1"></div>
+      <div class="seq-ctrl-spacer"></div>
+      <div class="seq-ctrl-group"><button id="seq-play-btn" onclick="seqTogglePlay()">PLAY</button></div>
+      <div class="seq-ctrl-group"><button onclick="seqClear()">CLEAR</button></div>
+    </div>
+    <div class="seq-container" id="seq-grid"></div>
+    <div class="seq-playhead" id="seq-playhead"></div>
+    <br>
+    <button class="esc-btn" data-overlay="absolve-overlay">ESC</button>
+  </div>
+</div>
+
 <script>
 /* ═══════════════════════════════════════════
    CROSSHAIR TRACKING
@@ -892,6 +1043,7 @@ function showOverlay(id) {
 
 function hideOverlay() {
   if (!activeOverlay) return;
+  if (activeOverlay.id === 'absolve-overlay') seqStop();
   activeOverlay.classList.remove('active');
   activeOverlay = null;
   bgLayer.classList.remove('zoomed-out');
@@ -990,6 +1142,12 @@ const commands = {
 
   about: () => {
     showOverlay('about-overlay');
+    return [];
+  },
+
+  absolve: () => {
+    showOverlay('absolve-overlay');
+    seqInit();
     return [];
   },
 
@@ -1990,6 +2148,237 @@ function initAudioOnce() {
 }
 document.addEventListener('click', initAudioOnce);
 document.addEventListener('keydown', initAudioOnce);
+
+/* ═══════════════════════════════════════════
+   BEAT SEQUENCER (ABSOLVE)
+   ═══════════════════════════════════════════ */
+const SEQ_STEPS = 16;
+const SEQ_ROWS = [
+  { name: 'CYMBL', type: 'noise', freq: 8000, decay: 0.08 },
+  { name: 'HIHAT', type: 'noise', freq: 6000, decay: 0.04 },
+  { name: 'CLAP',  type: 'noise', freq: 2000, decay: 0.12 },
+  { name: 'SNARE', type: 'noise', freq: 1200, decay: 0.1 },
+  { name: 'TOM H', type: 'tone',  freq: 300,  decay: 0.15 },
+  { name: 'TOM M', type: 'tone',  freq: 200,  decay: 0.2 },
+  { name: 'TOM L', type: 'tone',  freq: 120,  decay: 0.25 },
+  { name: 'KICK',  type: 'tone',  freq: 55,   decay: 0.3 },
+];
+
+let seqGrid = []; // [row][step] booleans
+let seqPlaying = false;
+let seqStep = 0;
+let seqInterval = null;
+let seqInited = false;
+
+// Arrow key support for sequencer input fields
+document.addEventListener('keydown', (e) => {
+  const el = e.target;
+  if (!el.closest || !el.closest('.seq-controls') || el.tagName !== 'INPUT') return;
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const isAdsr = ['seq-attack', 'seq-decay-ctrl', 'seq-sustain', 'seq-release'].includes(el.id);
+  const step = isAdsr ? 0.01 : 5;
+  let val = parseFloat(el.value) || 0;
+
+  if (e.key === 'ArrowUp') val += step;
+  else val -= step;
+
+  if (isAdsr) {
+    val = Math.max(0, Math.min(1, Math.round(val * 100) / 100));
+  } else {
+    val = Math.max(1, Math.round(val));
+  }
+
+  el.value = val;
+  if (el.id === 'seq-tempo') seqUpdateTempo();
+});
+
+function seqInit() {
+  if (seqInited) { seqUpdateUI(); return; }
+  seqInited = true;
+
+  const gridEl = document.getElementById('seq-grid');
+  const phEl = document.getElementById('seq-playhead');
+  gridEl.innerHTML = '';
+  phEl.innerHTML = '';
+  seqGrid = [];
+
+  for (let r = 0; r < SEQ_ROWS.length; r++) {
+    seqGrid[r] = new Array(SEQ_STEPS).fill(false);
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'seq-row';
+
+    const label = document.createElement('div');
+    label.className = 'seq-label';
+    label.textContent = SEQ_ROWS[r].name;
+    rowDiv.appendChild(label);
+
+    for (let s = 0; s < SEQ_STEPS; s++) {
+      const cell = document.createElement('div');
+      cell.className = 'seq-cell';
+      cell.dataset.row = r;
+      cell.dataset.step = s;
+      cell.addEventListener('click', () => {
+        seqGrid[r][s] = !seqGrid[r][s];
+        cell.classList.toggle('on', seqGrid[r][s]);
+      });
+      rowDiv.appendChild(cell);
+    }
+    gridEl.appendChild(rowDiv);
+  }
+
+  // Playhead row - add spacer to match seq-label
+  const phSpacer = document.createElement('div');
+  phSpacer.className = 'seq-label';
+  phEl.appendChild(phSpacer);
+  for (let s = 0; s < SEQ_STEPS; s++) {
+    const ph = document.createElement('div');
+    ph.className = 'seq-ph-cell';
+    ph.dataset.step = s;
+    phEl.appendChild(ph);
+  }
+}
+
+function seqUpdateUI() {
+  // Update current step highlighting
+  const cells = document.querySelectorAll('.seq-cell');
+  cells.forEach(c => c.classList.toggle('current', parseInt(c.dataset.step) === seqStep));
+  const phs = document.querySelectorAll('.seq-ph-cell');
+  phs.forEach(p => p.classList.toggle('current', parseInt(p.dataset.step) === seqStep));
+}
+
+function seqTogglePlay() {
+  if (seqPlaying) {
+    seqStop();
+  } else {
+    seqStart();
+  }
+}
+
+function seqStart() {
+  if (!audioCtx) return;
+  seqPlaying = true;
+  document.getElementById('seq-play-btn').classList.add('seq-active');
+  document.getElementById('seq-play-btn').textContent = 'STOP';
+  seqStep = 0;
+  seqTick();
+  const bpm = parseInt(document.getElementById('seq-tempo').value) || 120;
+  const msPerStep = (60000 / bpm) / 4;
+  seqInterval = setInterval(seqTick, msPerStep);
+
+  document.getElementById('seq-tempo').addEventListener('change', seqUpdateTempo);
+}
+
+function seqUpdateTempo() {
+  if (!seqPlaying) return;
+  clearInterval(seqInterval);
+  const bpm = parseInt(document.getElementById('seq-tempo').value) || 120;
+  const msPerStep = (60000 / bpm) / 4;
+  seqInterval = setInterval(seqTick, msPerStep);
+}
+
+function seqStop() {
+  seqPlaying = false;
+  clearInterval(seqInterval);
+  document.getElementById('seq-play-btn').classList.remove('seq-active');
+  document.getElementById('seq-play-btn').textContent = 'PLAY';
+  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('current'));
+  document.querySelectorAll('.seq-ph-cell').forEach(p => p.classList.remove('current'));
+  document.getElementById('seq-tempo').removeEventListener('change', seqUpdateTempo);
+}
+
+function seqClear() {
+  seqStop();
+  for (let r = 0; r < SEQ_ROWS.length; r++) {
+    for (let s = 0; s < SEQ_STEPS; s++) {
+      seqGrid[r][s] = false;
+    }
+  }
+  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('on'));
+  document.getElementById('seq-tempo').value = '120';
+  document.getElementById('seq-attack').value = '0.01';
+  document.getElementById('seq-decay-ctrl').value = '0.1';
+  document.getElementById('seq-sustain').value = '0.3';
+  document.getElementById('seq-release').value = '0.1';
+}
+
+function seqTick() {
+  seqUpdateUI();
+
+  // Trigger sounds for active cells at current step
+  for (let r = 0; r < SEQ_ROWS.length; r++) {
+    if (seqGrid[r][seqStep]) {
+      seqPlaySound(SEQ_ROWS[r]);
+    }
+  }
+
+  seqStep = (seqStep + 1) % SEQ_STEPS;
+}
+
+function seqClampADSR(el) {
+  let v = parseFloat(el.value);
+  if (isNaN(v)) v = 0;
+  v = Math.round(v * 100) / 100;
+  v = Math.max(0, Math.min(1, v));
+  el.value = v;
+  return v;
+}
+
+function seqGetADSR() {
+  return {
+    a: seqClampADSR(document.getElementById('seq-attack')) || 0.01,
+    d: seqClampADSR(document.getElementById('seq-decay-ctrl')) || 0.1,
+    s: seqClampADSR(document.getElementById('seq-sustain')) || 0.3,
+    r: seqClampADSR(document.getElementById('seq-release')) || 0.1,
+  };
+}
+
+function seqPlaySound(row) {
+  if (!audioCtx || !soundEnabled) return;
+  const now = audioCtx.currentTime;
+  const adsr = seqGetADSR();
+  const totalDur = adsr.a + adsr.d + adsr.r + 0.05;
+  const peak = 0.5;
+
+  const env = audioCtx.createGain();
+  env.gain.setValueAtTime(0.001, now);
+  env.gain.linearRampToValueAtTime(peak, now + adsr.a);
+  env.gain.linearRampToValueAtTime(peak * adsr.s, now + adsr.a + adsr.d);
+  env.gain.linearRampToValueAtTime(0.001, now + adsr.a + adsr.d + adsr.r);
+
+  if (row.type === 'noise') {
+    const len = Math.floor(audioCtx.sampleRate * totalDur);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'highpass';
+    filt.frequency.value = row.freq;
+
+    src.connect(filt);
+    filt.connect(env);
+    env.connect(masterGain || audioCtx.destination);
+    src.start(now);
+    src.stop(now + totalDur);
+  } else {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(row.freq * 2, now);
+    osc.frequency.exponentialRampToValueAtTime(row.freq, now + 0.05);
+
+    osc.connect(env);
+    env.connect(masterGain || audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + totalDur);
+  }
+}
 </script>
 </body>
 </html>
