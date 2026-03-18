@@ -762,6 +762,7 @@ body::after {
     <div class="help-list-item">IDENTIFY</div>
     <div class="help-list-item">PENITENCE</div>
     <div class="help-list-item">ABSOLVE</div>
+    <div class="help-list-item">ASCEND</div>
     <div class="help-list-item">EDICTS</div>
     <br>
     <div>TYPE A PROGRAM NAME TO LAUNCH IT OR COMMANDS TO SEE A LIST OF AVAILABLE COMMANDS</div>
@@ -771,124 +772,25 @@ body::after {
 </div>
 
 <!-- Status overlay -->
-<div id="status-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>SYSTEM STATUS</div>
-    <br>
-    <div>CORE STATUS &mdash; ONLINE</div>
-    <div>MEMORY &mdash; 84.2% AVAILABLE</div>
-    <div>NETWORK &mdash; CONNECTED</div>
-    <div>THREAT LEVEL &mdash; LOW</div>
-    <div id="status-uptime">UPTIME &mdash; 0H 0M 0S</div>
-    <div>BUILD &mdash; 1.0.7734</div>
-    <br>
-    <button class="esc-btn" data-overlay="status-overlay">ESC</button>
-  </div>
-</div>
-
 <!-- Commands overlay -->
 <div id="commands-overlay" class="overlay-panel">
   <div class="overlay-content">
     <div>AVAILABLE COMMANDS</div>
     <br>
     <div class="help-list-item">HELP</div>
-    <div class="help-list-item">STATUS</div>
     <div class="help-list-item">COMMANDS</div>
-    <div class="help-list-item">SCAN</div>
-    <div class="help-list-item">MAP</div>
-    <div class="help-list-item">LOG</div>
-    <div class="help-list-item">PING</div>
-    <div class="help-list-item">ABOUT</div>
+    <div class="help-list-item">PENITENCE</div>
+    <div class="help-list-item">ABSOLVE</div>
+    <div class="help-list-item">ASCEND</div>
+    <div class="help-list-item">PHOTO</div>
+    <div class="help-list-item">PLAY</div>
+    <div class="help-list-item">STOP</div>
     <div class="help-list-item">DATE</div>
     <div class="help-list-item">CLEAR</div>
-    <div class="help-list-item">PHOTO</div>
     <div class="help-list-item">SOUND ON</div>
     <div class="help-list-item">SOUND OFF</div>
     <br>
     <button class="esc-btn" data-overlay="commands-overlay">ESC</button>
-  </div>
-</div>
-
-<!-- Scan overlay -->
-<div id="scan-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>ENVIRONMENT SCAN</div>
-    <br>
-    <div>SCANNING SECTOR 01... OK</div>
-    <div>SCANNING SECTOR 02... OK</div>
-    <div>SCANNING SECTOR 03... OK</div>
-    <div>SCANNING SECTOR 04... ANOMALY DETECTED</div>
-    <br>
-    <div>SCAN COMPLETE. 1 ANOMALY FOUND IN SECTOR 04.</div>
-    <div>USE "MAP" TO VIEW SECTOR LAYOUT.</div>
-    <br>
-    <button class="esc-btn" data-overlay="scan-overlay">ESC</button>
-  </div>
-</div>
-
-<!-- Map overlay -->
-<div id="map-overlay" class="overlay-panel">
-  <div class="overlay-content" style="font-size:1.2rem;">
-    <div>SECTOR MAP</div>
-    <br>
-    <pre style="font-family:inherit;font-size:inherit;color:inherit;margin:0;">┌─────────┬─────────┐
-│         │         │
-│  SEC 01 │  SEC 02 │
-│   [OK]  │   [OK]  │
-│         │         │
-├─────────┼─────────┤
-│         │         │
-│  SEC 03 │  SEC 04 │
-│   [OK]  │  [WARN] │
-│         │         │
-└─────────┴─────────┘</pre>
-    <br>
-    <button class="esc-btn" data-overlay="map-overlay">ESC</button>
-  </div>
-</div>
-
-<!-- Log overlay -->
-<div id="log-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>SYSTEM LOG (LAST 5 ENTRIES)</div>
-    <br>
-    <div>[03.16.26 08:00:12] SYSTEM BOOT INITIATED</div>
-    <div>[03.16.26 08:00:14] CORE MODULES LOADED</div>
-    <div>[03.16.26 08:00:15] NETWORK INTERFACE UP</div>
-    <div>[03.16.26 08:00:16] MERCILESS1.0 READY</div>
-    <div>[03.16.26 08:01:03] USER SESSION STARTED</div>
-    <br>
-    <button class="esc-btn" data-overlay="log-overlay">ESC</button>
-  </div>
-</div>
-
-<!-- Ping overlay -->
-<div id="ping-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>PINGING CENTRAL NODE</div>
-    <br>
-    <div>REPLY FROM 10.0.0.1 &mdash; TIME=12MS</div>
-    <div>REPLY FROM 10.0.0.1 &mdash; TIME=14MS</div>
-    <div>REPLY FROM 10.0.0.1 &mdash; TIME=11MS</div>
-    <br>
-    <div>3 PACKETS SENT, 3 RECEIVED. AVG=12MS</div>
-    <br>
-    <button class="esc-btn" data-overlay="ping-overlay">ESC</button>
-  </div>
-</div>
-
-<!-- About overlay -->
-<div id="about-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>MERCILESS1.0</div>
-    <br>
-    <div>EXPERIMENTAL COMMAND INTERFACE</div>
-    <div>VERSION 1.0 BUILD 7734</div>
-    <div>CLASSIFICATION: UNRESTRICTED</div>
-    <br>
-    <div>DESIGNED FOR DEPTH AND PRECISION.</div>
-    <br>
-    <button class="esc-btn" data-overlay="about-overlay">ESC</button>
   </div>
 </div>
 
@@ -913,6 +815,33 @@ body::after {
 </div>
 
 
+<!-- Penitence (arpeggiator) overlay -->
+<div id="penitence-overlay" class="overlay-panel">
+  <div class="overlay-content" style="max-width:none;line-height:1.4;">
+    <div>PENITENCE</div>
+    <br>
+    <div class="seq-controls">
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">TEMPO</div><input type="text" id="pen-tempo" value="140"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">ATTACK</div><input type="text" id="pen-attack" value="0.02"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">DECAY</div><input type="text" id="pen-decay-ctrl" value="0.15"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">SUSTAIN</div><input type="text" id="pen-sustain" value="0.3"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">RELEASE</div><input type="text" id="pen-release" value="0.2"></div>
+      <div class="seq-ctrl-spacer"></div>
+      <div class="seq-ctrl-group">
+        <div class="seq-ctrl-label">PATTERN</div>
+        <button id="pen-pattern-btn" onclick="penCyclePattern()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;min-width:112px;">UP</button>
+      </div>
+      <div class="seq-ctrl-group"><button onclick="penClearNotes()">CLEAR</button></div>
+    </div>
+    <br>
+    <div id="pen-keyboard" style="display:flex;flex-direction:column;align-items:center;gap:4px;"></div>
+    <br>
+    <div id="pen-held-display" style="min-height:2em;opacity:0.6;">HOLD KEYS TO ARPEGGIATE</div>
+    <br>
+    <button class="esc-btn" data-overlay="penitence-overlay">ESC</button>
+  </div>
+</div>
+
 <!-- Absolve (beat sequencer) overlay -->
 <div id="absolve-overlay" class="overlay-panel">
   <div class="overlay-content" style="max-width:none;line-height:1.4;">
@@ -932,6 +861,27 @@ body::after {
     <div class="seq-playhead" id="seq-playhead"></div>
     <br>
     <button class="esc-btn" data-overlay="absolve-overlay">ESC</button>
+  </div>
+</div>
+
+<div id="ascend-overlay" class="overlay-panel">
+  <div class="overlay-content" style="max-width:none;line-height:1.4;">
+    <div>ASCEND</div>
+    <br>
+    <div class="seq-controls">
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">TEMPO</div><input type="text" id="asc-tempo" value="80"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">ATTACK</div><input type="text" id="asc-attack" value="0.15"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">DECAY</div><input type="text" id="asc-decay-ctrl" value="0.3"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">SUSTAIN</div><input type="text" id="asc-sustain" value="0.6"></div>
+      <div class="seq-ctrl-group"><div class="seq-ctrl-label">RELEASE</div><input type="text" id="asc-release" value="0.5"></div>
+      <div class="seq-ctrl-spacer"></div>
+      <div class="seq-ctrl-group"><button id="asc-play-btn" onclick="ascTogglePlay()">PLAY</button></div>
+      <div class="seq-ctrl-group"><button onclick="ascClear()">CLEAR</button></div>
+    </div>
+    <div class="seq-container" id="asc-grid"></div>
+    <div class="seq-playhead" id="asc-playhead"></div>
+    <br>
+    <button class="esc-btn" data-overlay="ascend-overlay">ESC</button>
   </div>
 </div>
 
@@ -1030,20 +980,11 @@ function showOverlay(id) {
   input.disabled = true;
   input.blur();
   playOpenSound();
-
-  // Update uptime if status
-  if (id === 'status-overlay') {
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-    const h = Math.floor(uptime / 3600);
-    const m = Math.floor((uptime % 3600) / 60);
-    const s = uptime % 60;
-    document.getElementById('status-uptime').textContent = `UPTIME \u2014 ${h}H ${m}M ${s}S`;
-  }
 }
 
 function hideOverlay() {
   if (!activeOverlay) return;
-  if (activeOverlay.id === 'absolve-overlay') seqStop();
+  // Let sequencers keep playing when closing their overlays
   activeOverlay.classList.remove('active');
   activeOverlay = null;
   bgLayer.classList.remove('zoomed-out');
@@ -1093,11 +1034,6 @@ const commands = {
     return [];
   },
 
-  status: () => {
-    showOverlay('status-overlay');
-    return [];
-  },
-
   commands: () => {
     showOverlay('commands-overlay');
     return [];
@@ -1115,39 +1051,26 @@ const commands = {
     return ['SOUND ENABLED.'];
   },
 
-  scan: () => {
-    showOverlay('scan-overlay');
-    return [];
-  },
-
-  map: () => {
-    showOverlay('map-overlay');
-    return [];
-  },
-
-  log: () => {
-    showOverlay('log-overlay');
-    return [];
-  },
-
   clear: () => {
     output.innerHTML = '';
     return [];
   },
 
-  ping: () => {
-    showOverlay('ping-overlay');
-    return [];
-  },
-
-  about: () => {
-    showOverlay('about-overlay');
+  penitence: () => {
+    showOverlay('penitence-overlay');
+    penInit();
     return [];
   },
 
   absolve: () => {
     showOverlay('absolve-overlay');
     seqInit();
+    return [];
+  },
+
+  ascend: () => {
+    showOverlay('ascend-overlay');
+    ascInit();
     return [];
   },
 
@@ -1161,6 +1084,19 @@ const commands = {
     return [
       `CURRENT DATE/TIME: ${now.toISOString().replace('T', ' ').slice(0, 19)}`,
     ];
+  },
+
+  play: () => {
+    seqInit(); ascInit();
+    if (!seqPlaying) seqStart();
+    if (!ascPlaying) ascStart();
+    return ['PLAYING ABSOLVE + ASCEND'];
+  },
+
+  stop: () => {
+    if (seqPlaying) seqStop();
+    if (ascPlaying) ascStop();
+    return ['STOPPED'];
   },
 };
 
@@ -1998,10 +1934,16 @@ function startAmbientAudio() {
   lfoGain.connect(humGain.gain);
   lfo.start();
 
+  // Global reticle position for sequencer modulation
+  window._reticleX = 0.5;
+  window._reticleY = 0.5;
+
   document.addEventListener('mousemove', (e) => {
     if (!audioCtx || !soundEnabled) return;
     const normY = e.clientY / window.innerHeight;
     const normX = e.clientX / window.innerWidth;
+    window._reticleX = normX;
+    window._reticleY = normY;
 
     // Pitch: 50Hz (bottom) to 80Hz (top)
     const freq = 80 - normY * 30;
@@ -2150,6 +2092,283 @@ document.addEventListener('click', initAudioOnce);
 document.addEventListener('keydown', initAudioOnce);
 
 /* ═══════════════════════════════════════════
+   ARPEGGIATOR (PENITENCE)
+   ═══════════════════════════════════════════ */
+
+// Two-row keyboard mapping: lower row = C3-B3, upper row = C4-B4
+const PEN_KEY_MAP = {
+  'z': { note: 'C3',  freq: 130.81 },
+  's': { note: 'C#3', freq: 138.59 },
+  'x': { note: 'D3',  freq: 146.83 },
+  'd': { note: 'D#3', freq: 155.56 },
+  'c': { note: 'E3',  freq: 164.81 },
+  'v': { note: 'F3',  freq: 174.61 },
+  'g': { note: 'F#3', freq: 185.00 },
+  'b': { note: 'G3',  freq: 196.00 },
+  'h': { note: 'G#3', freq: 207.65 },
+  'n': { note: 'A3',  freq: 220.00 },
+  'j': { note: 'A#3', freq: 233.08 },
+  'm': { note: 'B3',  freq: 246.94 },
+  'q': { note: 'C4',  freq: 261.63 },
+  '2': { note: 'C#4', freq: 277.18 },
+  'w': { note: 'D4',  freq: 293.66 },
+  '3': { note: 'D#4', freq: 311.13 },
+  'e': { note: 'E4',  freq: 329.63 },
+  'r': { note: 'F4',  freq: 349.23 },
+  '5': { note: 'F#4', freq: 369.99 },
+  't': { note: 'G4',  freq: 392.00 },
+  '6': { note: 'G#4', freq: 415.30 },
+  'y': { note: 'A4',  freq: 440.00 },
+  '7': { note: 'A#4', freq: 466.16 },
+  'u': { note: 'B4',  freq: 493.88 },
+};
+
+let penInited = false;
+let penHeldKeys = new Set();
+let penArpNotes = [];
+let penArpIndex = 0;
+let penArpInterval = null;
+let penArpRunning = false;
+let penWaitingForBeat = false;
+const PEN_PATTERNS = ['UP', 'DOWN', 'UP/DOWN', 'RANDOM'];
+let penPatternIdx = 0;
+let penUpDownDir = 1;
+
+function penInit() {
+  if (penInited) return;
+  penInited = true;
+
+  const kb = document.getElementById('pen-keyboard');
+  kb.innerHTML = '';
+
+  const upperKeys = ['q','2','w','3','e','r','5','t','6','y','7','u'];
+  const lowerKeys = ['z','s','x','d','c','v','g','b','h','n','j','m'];
+  const isBlack = [false,true,false,true,false,false,true,false,true,false,true,false];
+
+  [upperKeys, lowerKeys].forEach((rowKeys) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:4px;';
+    rowKeys.forEach((k, i) => {
+      const key = document.createElement('div');
+      key.id = 'pen-key-' + k;
+      key.dataset.key = k;
+      key.textContent = k.toUpperCase();
+      key.style.cssText = `
+        width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+        border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;
+        font-size:inherit;cursor:none;transition:background 0.1s,color 0.1s;
+        ${isBlack[i] ? 'opacity:0.6;' : ''}
+      `;
+      key.addEventListener('mousedown', (ev) => {
+        ev.preventDefault();
+        penKeyDown(k);
+      });
+      key.addEventListener('mouseup', () => penKeyUp(k));
+      row.appendChild(key);
+    });
+    kb.appendChild(row);
+  });
+}
+
+function penKeyDown(k) {
+  if (!PEN_KEY_MAP[k] || penHeldKeys.has(k)) return;
+  penHeldKeys.add(k);
+  const el = document.getElementById('pen-key-' + k);
+  if (el) { el.style.background = 'var(--amber)'; el.style.color = 'var(--bg)'; }
+  penUpdateArp();
+}
+
+function penKeyUp(k) {
+  penHeldKeys.delete(k);
+  const el = document.getElementById('pen-key-' + k);
+  if (el) { el.style.background = 'transparent'; el.style.color = 'var(--amber)'; }
+  penUpdateArp();
+}
+
+function penUpdateArp() {
+  penArpNotes = [];
+  penHeldKeys.forEach(k => {
+    if (PEN_KEY_MAP[k]) penArpNotes.push(PEN_KEY_MAP[k]);
+  });
+  penArpNotes.sort((a, b) => a.freq - b.freq);
+
+  const display = document.getElementById('pen-held-display');
+  if (penArpNotes.length === 0) {
+    display.textContent = 'HOLD KEYS TO ARPEGGIATE';
+    display.style.opacity = '0.6';
+    if (penArpRunning) {
+      clearInterval(penArpInterval);
+      penArpRunning = false;
+    }
+    penWaitingForBeat = false;
+  } else {
+    display.textContent = penArpNotes.map(n => n.note).join(' \u2192 ');
+    display.style.opacity = '1';
+    if (!penArpRunning && !penWaitingForBeat) {
+      penArpIndex = 0;
+      penUpDownDir = 1;
+      if (masterPlaying) {
+        // Wait for next master tick to start on the beat
+        penWaitingForBeat = true;
+      } else {
+        // No master clock running, start immediately
+        penArpRunning = true;
+        penArpTick();
+        penStartInterval();
+      }
+    }
+  }
+}
+
+function penStartInterval() {
+  clearInterval(penArpInterval);
+  const bpm = parseInt(document.getElementById('pen-tempo').value) || 140;
+  const msPerStep = (60000 / bpm) / 4;
+  penArpInterval = setInterval(penArpTick, msPerStep);
+}
+
+function penUpdateTempo() {
+  if (penArpRunning) penStartInterval();
+}
+
+function penArpTick() {
+  if (penArpNotes.length === 0) return;
+
+  const note = penArpNotes[penArpIndex];
+  penPlayNote(note);
+
+  const pat = PEN_PATTERNS[penPatternIdx];
+  if (pat === 'UP') {
+    penArpIndex = (penArpIndex + 1) % penArpNotes.length;
+  } else if (pat === 'DOWN') {
+    penArpIndex = (penArpIndex - 1 + penArpNotes.length) % penArpNotes.length;
+  } else if (pat === 'UP/DOWN') {
+    if (penArpNotes.length <= 1) { penArpIndex = 0; }
+    else {
+      penArpIndex += penUpDownDir;
+      if (penArpIndex >= penArpNotes.length - 1) { penArpIndex = penArpNotes.length - 1; penUpDownDir = -1; }
+      else if (penArpIndex <= 0) { penArpIndex = 0; penUpDownDir = 1; }
+    }
+  } else {
+    penArpIndex = Math.floor(Math.random() * penArpNotes.length);
+  }
+
+  // Flash the active key
+  Object.entries(PEN_KEY_MAP).forEach(([k, v]) => {
+    if (v === note) {
+      const el = document.getElementById('pen-key-' + k);
+      if (el) {
+        el.style.boxShadow = '0 0 12px var(--amber)';
+        setTimeout(() => { el.style.boxShadow = ''; }, 80);
+      }
+    }
+  });
+}
+
+function penPlayNote(note) {
+  if (!audioCtx || !soundEnabled) return;
+  const now = audioCtx.currentTime;
+
+  const a = parseFloat(document.getElementById('pen-attack').value) || 0.02;
+  const d = parseFloat(document.getElementById('pen-decay-ctrl').value) || 0.15;
+  const s = parseFloat(document.getElementById('pen-sustain').value) || 0.3;
+  const r = parseFloat(document.getElementById('pen-release').value) || 0.2;
+  const totalDur = a + d + r + 0.05;
+
+  const rx = window._reticleX || 0.5;
+  const ry = window._reticleY || 0.5;
+  const pitchShift = Math.pow(2, (ry - 0.5) * -0.3);
+  const wobbleRate = rx * 10;
+  const wobbleDepth = rx * 30;
+
+  const freq = note.freq * pitchShift;
+
+  const env = audioCtx.createGain();
+  env.gain.setValueAtTime(0.001, now);
+  env.gain.linearRampToValueAtTime(0.35, now + a);
+  env.gain.linearRampToValueAtTime(0.35 * s, now + a + d);
+  env.gain.linearRampToValueAtTime(0.001, now + a + d + r);
+
+  const osc1 = audioCtx.createOscillator();
+  osc1.type = 'sawtooth';
+  osc1.frequency.value = freq;
+
+  const osc2 = audioCtx.createOscillator();
+  osc2.type = 'sawtooth';
+  osc2.frequency.value = freq;
+  osc2.detune.value = 7;
+
+  const sub = audioCtx.createOscillator();
+  sub.type = 'sine';
+  sub.frequency.value = freq * 0.5;
+
+  const wobLfo = audioCtx.createOscillator();
+  const wobGain = audioCtx.createGain();
+  wobLfo.frequency.value = wobbleRate;
+  wobGain.gain.value = wobbleDepth;
+  wobLfo.connect(wobGain);
+  wobGain.connect(osc1.detune);
+  wobGain.connect(osc2.detune);
+  wobLfo.start(now);
+  wobLfo.stop(now + totalDur);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(freq * 6, now);
+  filter.frequency.exponentialRampToValueAtTime(freq * 2, now + a + d);
+  filter.Q.value = 2;
+
+  const mix = audioCtx.createGain();
+  mix.gain.value = 0.18;
+
+  osc1.connect(mix);
+  osc2.connect(mix);
+  sub.connect(mix);
+  mix.connect(filter);
+  filter.connect(env);
+  env.connect(masterGain || audioCtx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + totalDur);
+  osc2.start(now);
+  osc2.stop(now + totalDur);
+  sub.start(now);
+  sub.stop(now + totalDur);
+}
+
+function penCyclePattern() {
+  penPatternIdx = (penPatternIdx + 1) % PEN_PATTERNS.length;
+  document.getElementById('pen-pattern-btn').textContent = PEN_PATTERNS[penPatternIdx];
+  penArpIndex = 0;
+  penUpDownDir = 1;
+}
+
+function penClearNotes() {
+  penHeldKeys.forEach(k => penKeyUp(k));
+  penHeldKeys.clear();
+  penUpdateArp();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!penInited) return;
+  const overlay = document.getElementById('penitence-overlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  if (e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if (PEN_KEY_MAP[k]) {
+    e.preventDefault();
+    e.stopPropagation();
+    penKeyDown(k);
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (!penInited) return;
+  const k = e.key.toLowerCase();
+  if (PEN_KEY_MAP[k]) penKeyUp(k);
+});
+
+/* ═══════════════════════════════════════════
    BEAT SEQUENCER (ABSOLVE)
    ═══════════════════════════════════════════ */
 const SEQ_STEPS = 16;
@@ -2161,13 +2380,56 @@ const SEQ_ROWS = [
   { name: 'TOM H', type: 'tone',  freq: 300,  decay: 0.15 },
   { name: 'TOM M', type: 'tone',  freq: 200,  decay: 0.2 },
   { name: 'TOM L', type: 'tone',  freq: 120,  decay: 0.25 },
-  { name: 'KICK',  type: 'tone',  freq: 55,   decay: 0.3 },
+  { name: 'KICK',  type: 'kick',  freq: 55,   decay: 0.3 },
 ];
+
+// Shared master clock for both sequencers
+let masterStep = 0;
+let masterInterval = null;
+let masterPlaying = false;
+
+let masterTickTime = 0; // timestamp of last master tick
+
+function masterTick() {
+  masterTickTime = performance.now();
+  if (seqPlaying) seqTickAt(masterStep);
+  if (ascPlaying) ascTickAt(masterStep);
+  // Notify arp to sync-start if waiting
+  if (penWaitingForBeat && penArpNotes.length > 0) {
+    penWaitingForBeat = false;
+    penArpRunning = true;
+    penArpTick();
+    penStartInterval();
+  }
+  masterStep = (masterStep + 1) % 16;
+}
+
+function masterStart() {
+  if (masterPlaying) return;
+  masterPlaying = true;
+  masterStep = 0;
+  masterTick();
+  const bpm = parseInt(document.getElementById('seq-tempo').value || document.getElementById('asc-tempo').value) || 120;
+  const msPerStep = (60000 / bpm) / 4;
+  masterInterval = setInterval(masterTick, msPerStep);
+}
+
+function masterStop() {
+  if (seqPlaying || ascPlaying) return; // only stop if both are stopped
+  masterPlaying = false;
+  clearInterval(masterInterval);
+}
+
+function masterUpdateTempo() {
+  if (!masterPlaying) return;
+  clearInterval(masterInterval);
+  const bpm = parseInt(document.getElementById('seq-tempo').value || document.getElementById('asc-tempo').value) || 120;
+  const msPerStep = (60000 / bpm) / 4;
+  masterInterval = setInterval(masterTick, msPerStep);
+}
 
 let seqGrid = []; // [row][step] booleans
 let seqPlaying = false;
-let seqStep = 0;
-let seqInterval = null;
 let seqInited = false;
 
 // Arrow key support for sequencer input fields
@@ -2178,7 +2440,7 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
   e.stopPropagation();
 
-  const isAdsr = ['seq-attack', 'seq-decay-ctrl', 'seq-sustain', 'seq-release'].includes(el.id);
+  const isAdsr = ['seq-attack', 'seq-decay-ctrl', 'seq-sustain', 'seq-release', 'asc-attack', 'asc-decay-ctrl', 'asc-sustain', 'asc-release', 'pen-attack', 'pen-decay-ctrl', 'pen-sustain', 'pen-release'].includes(el.id);
   const step = isAdsr ? 0.01 : 5;
   let val = parseFloat(el.value) || 0;
 
@@ -2192,7 +2454,8 @@ document.addEventListener('keydown', (e) => {
   }
 
   el.value = val;
-  if (el.id === 'seq-tempo') seqUpdateTempo();
+  if (el.id === 'seq-tempo' || el.id === 'asc-tempo') masterUpdateTempo();
+  if (el.id === 'pen-tempo') penUpdateTempo();
 });
 
 function seqInit() {
@@ -2204,6 +2467,31 @@ function seqInit() {
   gridEl.innerHTML = '';
   phEl.innerHTML = '';
   seqGrid = [];
+
+  let seqDragging = false;
+  let seqPaintOn = true;
+
+  gridEl.addEventListener('mousedown', (e) => {
+    const cell = e.target.closest('.seq-cell');
+    if (!cell) return;
+    e.preventDefault();
+    seqDragging = true;
+    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
+    seqPaintOn = !seqGrid[r][s];
+    seqGrid[r][s] = seqPaintOn;
+    cell.classList.toggle('on', seqPaintOn);
+  });
+
+  gridEl.addEventListener('mouseover', (e) => {
+    if (!seqDragging) return;
+    const cell = e.target.closest('.seq-cell');
+    if (!cell) return;
+    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
+    seqGrid[r][s] = seqPaintOn;
+    cell.classList.toggle('on', seqPaintOn);
+  });
+
+  document.addEventListener('mouseup', () => { seqDragging = false; });
 
   for (let r = 0; r < SEQ_ROWS.length; r++) {
     seqGrid[r] = new Array(SEQ_STEPS).fill(false);
@@ -2220,10 +2508,6 @@ function seqInit() {
       cell.className = 'seq-cell';
       cell.dataset.row = r;
       cell.dataset.step = s;
-      cell.addEventListener('click', () => {
-        seqGrid[r][s] = !seqGrid[r][s];
-        cell.classList.toggle('on', seqGrid[r][s]);
-      });
       rowDiv.appendChild(cell);
     }
     gridEl.appendChild(rowDiv);
@@ -2241,12 +2525,11 @@ function seqInit() {
   }
 }
 
-function seqUpdateUI() {
-  // Update current step highlighting
-  const cells = document.querySelectorAll('.seq-cell');
-  cells.forEach(c => c.classList.toggle('current', parseInt(c.dataset.step) === seqStep));
-  const phs = document.querySelectorAll('.seq-ph-cell');
-  phs.forEach(p => p.classList.toggle('current', parseInt(p.dataset.step) === seqStep));
+function seqUpdateUI(step) {
+  const cells = document.querySelectorAll('#seq-grid .seq-cell');
+  cells.forEach(c => c.classList.toggle('current', parseInt(c.dataset.step) === step));
+  const phs = document.querySelectorAll('#seq-playhead .seq-ph-cell');
+  phs.forEach(p => p.classList.toggle('current', parseInt(p.dataset.step) === step));
 }
 
 function seqTogglePlay() {
@@ -2262,31 +2545,16 @@ function seqStart() {
   seqPlaying = true;
   document.getElementById('seq-play-btn').classList.add('seq-active');
   document.getElementById('seq-play-btn').textContent = 'STOP';
-  seqStep = 0;
-  seqTick();
-  const bpm = parseInt(document.getElementById('seq-tempo').value) || 120;
-  const msPerStep = (60000 / bpm) / 4;
-  seqInterval = setInterval(seqTick, msPerStep);
-
-  document.getElementById('seq-tempo').addEventListener('change', seqUpdateTempo);
-}
-
-function seqUpdateTempo() {
-  if (!seqPlaying) return;
-  clearInterval(seqInterval);
-  const bpm = parseInt(document.getElementById('seq-tempo').value) || 120;
-  const msPerStep = (60000 / bpm) / 4;
-  seqInterval = setInterval(seqTick, msPerStep);
+  masterStart();
 }
 
 function seqStop() {
   seqPlaying = false;
-  clearInterval(seqInterval);
   document.getElementById('seq-play-btn').classList.remove('seq-active');
   document.getElementById('seq-play-btn').textContent = 'PLAY';
-  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('current'));
-  document.querySelectorAll('.seq-ph-cell').forEach(p => p.classList.remove('current'));
-  document.getElementById('seq-tempo').removeEventListener('change', seqUpdateTempo);
+  document.querySelectorAll('#seq-grid .seq-cell').forEach(c => c.classList.remove('current'));
+  document.querySelectorAll('#seq-playhead .seq-ph-cell').forEach(p => p.classList.remove('current'));
+  masterStop();
 }
 
 function seqClear() {
@@ -2304,17 +2572,13 @@ function seqClear() {
   document.getElementById('seq-release').value = '0.1';
 }
 
-function seqTick() {
-  seqUpdateUI();
-
-  // Trigger sounds for active cells at current step
+function seqTickAt(step) {
+  seqUpdateUI(step);
   for (let r = 0; r < SEQ_ROWS.length; r++) {
-    if (seqGrid[r][seqStep]) {
+    if (seqGrid[r][step]) {
       seqPlaySound(SEQ_ROWS[r]);
     }
   }
-
-  seqStep = (seqStep + 1) % SEQ_STEPS;
 }
 
 function seqClampADSR(el) {
@@ -2342,11 +2606,108 @@ function seqPlaySound(row) {
   const totalDur = adsr.a + adsr.d + adsr.r + 0.05;
   const peak = 0.5;
 
+  // Reticle modulation
+  const rx = window._reticleX || 0.5;
+  const ry = window._reticleY || 0.5;
+  const pitchShift = Math.pow(2, (ry - 0.5) * -0.5); // subtler for beats: half octave range
+  const wobbleRate = rx * 10;
+  const wobbleDepth = rx * 40;
+
   const env = audioCtx.createGain();
   env.gain.setValueAtTime(0.001, now);
   env.gain.linearRampToValueAtTime(peak, now + adsr.a);
   env.gain.linearRampToValueAtTime(peak * adsr.s, now + adsr.a + adsr.d);
   env.gain.linearRampToValueAtTime(0.001, now + adsr.a + adsr.d + adsr.r);
+
+  if (row.type === 'kick') {
+    const kickDur = 0.4;
+    const baseFreq = 55 * pitchShift;
+
+    // Sub oscillator — deep heavy bass
+    const sub = audioCtx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(baseFreq * 1.8, now);
+    sub.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, now + 0.12);
+
+    const subEnv = audioCtx.createGain();
+    subEnv.gain.setValueAtTime(2.5, now);
+    subEnv.gain.exponentialRampToValueAtTime(0.001, now + kickDur);
+
+    // Second sub layer even lower
+    const sub2 = audioCtx.createOscillator();
+    sub2.type = 'sine';
+    sub2.frequency.setValueAtTime(baseFreq, now);
+    sub2.frequency.exponentialRampToValueAtTime(baseFreq * 0.35, now + 0.15);
+
+    const sub2Env = audioCtx.createGain();
+    sub2Env.gain.setValueAtTime(2.0, now);
+    sub2Env.gain.exponentialRampToValueAtTime(0.001, now + kickDur * 1.2);
+
+    // Body thud
+    const body = audioCtx.createOscillator();
+    body.type = 'sine';
+    body.frequency.setValueAtTime(baseFreq * 2, now);
+    body.frequency.exponentialRampToValueAtTime(baseFreq * 0.6, now + 0.05);
+
+    const bodyEnv = audioCtx.createGain();
+    bodyEnv.gain.setValueAtTime(1.0, now);
+    bodyEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    // Subtle transient click
+    const clickLen = Math.floor(audioCtx.sampleRate * 0.01);
+    const clickBuf = audioCtx.createBuffer(1, clickLen, audioCtx.sampleRate);
+    const clickData = clickBuf.getChannelData(0);
+    for (let i = 0; i < clickLen; i++) clickData[i] = (Math.random() * 2 - 1);
+    const clickSrc = audioCtx.createBufferSource();
+    clickSrc.buffer = clickBuf;
+    const clickEnv = audioCtx.createGain();
+    clickEnv.gain.setValueAtTime(0.3, now);
+    clickEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+    // Distortion/saturation via waveshaper
+    const shaper = audioCtx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 128) - 1;
+      curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x));
+    }
+    shaper.curve = curve;
+    shaper.oversample = '2x';
+
+    // Wobble
+    const wobLfo = audioCtx.createOscillator();
+    const wobGn = audioCtx.createGain();
+    wobLfo.frequency.value = wobbleRate;
+    wobGn.gain.value = wobbleDepth * 0.5;
+    wobLfo.connect(wobGn);
+    wobGn.connect(sub.detune);
+    wobGn.connect(sub2.detune);
+    wobGn.connect(body.detune);
+    wobLfo.start(now);
+    wobLfo.stop(now + kickDur);
+
+    sub.connect(subEnv);
+    sub2.connect(sub2Env);
+    body.connect(bodyEnv);
+    clickSrc.connect(clickEnv);
+
+    subEnv.connect(shaper);
+    sub2Env.connect(shaper);
+    bodyEnv.connect(shaper);
+    clickEnv.connect(shaper);
+
+    shaper.connect(masterGain || audioCtx.destination);
+
+    sub.start(now);
+    sub.stop(now + kickDur);
+    sub2.start(now);
+    sub2.stop(now + kickDur * 1.2);
+    body.start(now);
+    body.stop(now + kickDur);
+    clickSrc.start(now);
+    clickSrc.stop(now + 0.015);
+    return;
+  }
 
   if (row.type === 'noise') {
     const len = Math.floor(audioCtx.sampleRate * totalDur);
@@ -2360,7 +2721,7 @@ function seqPlaySound(row) {
 
     const filt = audioCtx.createBiquadFilter();
     filt.type = 'highpass';
-    filt.frequency.value = row.freq;
+    filt.frequency.value = row.freq * pitchShift;
 
     src.connect(filt);
     filt.connect(env);
@@ -2370,14 +2731,293 @@ function seqPlaySound(row) {
   } else {
     const osc = audioCtx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(row.freq * 2, now);
-    osc.frequency.exponentialRampToValueAtTime(row.freq, now + 0.05);
+    const baseFreq = row.freq * pitchShift;
+    osc.frequency.setValueAtTime(baseFreq * 2, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.05);
+
+    // Reticle wobble
+    const wobLfo = audioCtx.createOscillator();
+    const wobGain = audioCtx.createGain();
+    wobLfo.frequency.value = wobbleRate;
+    wobGain.gain.value = wobbleDepth;
+    wobLfo.connect(wobGain);
+    wobGain.connect(osc.detune);
+    wobLfo.start(now);
+    wobLfo.stop(now + totalDur);
 
     osc.connect(env);
     env.connect(masterGain || audioCtx.destination);
     osc.start(now);
     osc.stop(now + totalDur);
   }
+}
+
+/* ═══════════════════════════════════════════
+   CHOIR SEQUENCER (ASCEND)
+   ═══════════════════════════════════════════ */
+const ASC_STEPS = 16;
+// Breathy/ghostly vowel formants with wide bandwidths for whooshy quality
+const VOWELS = {
+  hah:  { f: [750, 1100, 2600],  bw: [150, 180, 200] },
+  hoo:  { f: [280, 750, 2200],   bw: [120, 150, 180] },
+  hwee: { f: [300, 2200, 3100],  bw: [140, 200, 220] },
+  so:   { f: [400, 850, 2800],   bw: [130, 160, 190] },
+  shh:  { f: [500, 1600, 2700],  bw: [200, 250, 280] },
+  woe:  { f: [350, 700, 2400],   bw: [160, 180, 200] },
+  huh:  { f: [600, 1000, 2500],  bw: [180, 200, 220] },
+  ooh:  { f: [320, 800, 2300],   bw: [140, 170, 200] },
+};
+const ASC_ROWS = [
+  { name: 'SERAPH',  freq: 880,  vowel: 'hwee', type: 'choir' },
+  { name: 'LIGHT',   freq: 659,  vowel: 'hah',  type: 'choir' },
+  { name: 'AETHER',  freq: 523,  vowel: 'shh',  type: 'choir' },
+  { name: 'HYMN',    freq: 392,  vowel: 'so',   type: 'choir' },
+  { name: 'VESPER',  freq: 330,  vowel: 'woe',  type: 'choir' },
+  { name: 'CHANT',   freq: 261,  vowel: 'huh',  type: 'choir' },
+  { name: 'DRONE',   freq: 165,  vowel: 'hoo',  type: 'drone' },
+  { name: 'ABYSS',   freq: 82,   vowel: 'ooh',  type: 'drone' },
+];
+
+let ascGrid = [];
+let ascPlaying = false;
+let ascInited = false;
+
+function ascInit() {
+  if (ascInited) { ascUpdateUI(); return; }
+  ascInited = true;
+
+  const gridEl = document.getElementById('asc-grid');
+  const phEl = document.getElementById('asc-playhead');
+  gridEl.innerHTML = '';
+  phEl.innerHTML = '';
+  ascGrid = [];
+
+  let ascDragging = false;
+  let ascPaintOn = true;
+
+  gridEl.addEventListener('mousedown', (e) => {
+    const cell = e.target.closest('.seq-cell');
+    if (!cell) return;
+    e.preventDefault();
+    ascDragging = true;
+    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
+    ascPaintOn = !ascGrid[r][s];
+    ascGrid[r][s] = ascPaintOn;
+    cell.classList.toggle('on', ascPaintOn);
+  });
+
+  gridEl.addEventListener('mouseover', (e) => {
+    if (!ascDragging) return;
+    const cell = e.target.closest('.seq-cell');
+    if (!cell) return;
+    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
+    ascGrid[r][s] = ascPaintOn;
+    cell.classList.toggle('on', ascPaintOn);
+  });
+
+  document.addEventListener('mouseup', () => { ascDragging = false; });
+
+  for (let r = 0; r < ASC_ROWS.length; r++) {
+    ascGrid[r] = new Array(ASC_STEPS).fill(false);
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'seq-row';
+
+    const label = document.createElement('div');
+    label.className = 'seq-label';
+    label.textContent = ASC_ROWS[r].name;
+    rowDiv.appendChild(label);
+
+    for (let s = 0; s < ASC_STEPS; s++) {
+      const cell = document.createElement('div');
+      cell.className = 'seq-cell';
+      cell.dataset.row = r;
+      cell.dataset.step = s;
+      rowDiv.appendChild(cell);
+    }
+    gridEl.appendChild(rowDiv);
+  }
+
+  const phSpacer = document.createElement('div');
+  phSpacer.className = 'seq-label';
+  phEl.appendChild(phSpacer);
+  for (let s = 0; s < ASC_STEPS; s++) {
+    const ph = document.createElement('div');
+    ph.className = 'seq-ph-cell';
+    ph.dataset.step = s;
+    phEl.appendChild(ph);
+  }
+}
+
+function ascUpdateUI(step) {
+  const cells = document.querySelectorAll('#asc-grid .seq-cell');
+  cells.forEach(c => c.classList.toggle('current', parseInt(c.dataset.step) === step));
+  const phs = document.querySelectorAll('#asc-playhead .seq-ph-cell');
+  phs.forEach(p => p.classList.toggle('current', parseInt(p.dataset.step) === step));
+}
+
+function ascTogglePlay() {
+  if (ascPlaying) ascStop(); else ascStart();
+}
+
+function ascStart() {
+  if (!audioCtx) return;
+  ascPlaying = true;
+  document.getElementById('asc-play-btn').classList.add('seq-active');
+  document.getElementById('asc-play-btn').textContent = 'STOP';
+  masterStart();
+}
+
+function ascStop() {
+  ascPlaying = false;
+  document.getElementById('asc-play-btn').classList.remove('seq-active');
+  document.getElementById('asc-play-btn').textContent = 'PLAY';
+  document.querySelectorAll('#asc-grid .seq-cell').forEach(c => c.classList.remove('current'));
+  document.querySelectorAll('#asc-playhead .seq-ph-cell').forEach(p => p.classList.remove('current'));
+  masterStop();
+}
+
+function ascClear() {
+  ascStop();
+  for (let r = 0; r < ASC_ROWS.length; r++) {
+    for (let s = 0; s < ASC_STEPS; s++) {
+      ascGrid[r][s] = false;
+    }
+  }
+  document.querySelectorAll('#asc-grid .seq-cell').forEach(c => c.classList.remove('on'));
+  document.getElementById('asc-tempo').value = '80';
+  document.getElementById('asc-attack').value = '0.15';
+  document.getElementById('asc-decay-ctrl').value = '0.3';
+  document.getElementById('asc-sustain').value = '0.6';
+  document.getElementById('asc-release').value = '0.5';
+}
+
+function ascTickAt(step) {
+  ascUpdateUI(step);
+  for (let r = 0; r < ASC_ROWS.length; r++) {
+    if (ascGrid[r][step]) {
+      ascPlaySound(ASC_ROWS[r]);
+    }
+  }
+}
+
+function ascGetADSR() {
+  const clamp = (id) => {
+    const el = document.getElementById(id);
+    let v = parseFloat(el.value);
+    if (isNaN(v)) v = 0;
+    v = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
+    el.value = v;
+    return v;
+  };
+  return {
+    a: clamp('asc-attack') || 0.15,
+    d: clamp('asc-decay-ctrl') || 0.3,
+    s: clamp('asc-sustain') || 0.6,
+    r: clamp('asc-release') || 0.5,
+  };
+}
+
+function ascPlaySound(row) {
+  if (!audioCtx || !soundEnabled) return;
+  const now = audioCtx.currentTime;
+  const adsr = ascGetADSR();
+  const totalDur = adsr.a + adsr.d + adsr.r + 0.4;
+  const peak = 0.2;
+  const vowel = VOWELS[row.vowel] || VOWELS.ah;
+
+  // Ghostly source: blend of tonal and breathy
+  const sourceGain = audioCtx.createGain();
+  sourceGain.gain.value = row.type === 'drone' ? 0.3 : 0.15;
+
+  // Reticle modulation: Y = pitch shift (-1 to +1 octave), X = wobble rate
+  const rx = window._reticleX || 0.5;
+  const ry = window._reticleY || 0.5;
+  const pitchShift = Math.pow(2, (ry - 0.5) * -1); // top = octave up, bottom = octave down
+  const wobbleRate = rx * 14; // 0-14Hz wobble from reticle X
+  const wobbleDepth = rx * 60; // deeper wobble toward right (in cents)
+
+  // Detuned voices — use sine/triangle mix for softer, breathier tone
+  const detunings = [-12, -5, 0, 5, 12];
+  detunings.forEach((det, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+    const baseFreq = row.freq * pitchShift;
+    // Pitch slides up from slightly below — ghostly "hwoo" onset
+    osc.frequency.setValueAtTime(baseFreq * 0.92, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq, now + adsr.a * 0.7);
+    osc.detune.value = det;
+
+    // Slow ghostly vibrato (3-5Hz, wide wobble)
+    const vib = audioCtx.createOscillator();
+    const vibGain = audioCtx.createGain();
+    vib.frequency.value = 3 + Math.random() * 2;
+    vibGain.gain.value = 12 + Math.random() * 8;
+    vib.connect(vibGain);
+    vibGain.connect(osc.detune);
+    vib.start(now);
+    vib.stop(now + totalDur);
+
+    // Reticle wobble LFO on detune
+    const wobLfo = audioCtx.createOscillator();
+    const wobGain = audioCtx.createGain();
+    wobLfo.frequency.value = wobbleRate;
+    wobGain.gain.value = wobbleDepth;
+    wobLfo.connect(wobGain);
+    wobGain.connect(osc.detune);
+    wobLfo.start(now);
+    wobLfo.stop(now + totalDur);
+
+    osc.connect(sourceGain);
+    osc.start(now);
+    osc.stop(now + totalDur);
+  });
+
+  // Heavy breathy noise — the "h" and whoosh
+  const noiseDur = Math.floor(audioCtx.sampleRate * totalDur);
+  const noiseBuf = audioCtx.createBuffer(1, noiseDur, audioCtx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < noiseDur; i++) nd[i] = (Math.random() * 2 - 1) * 0.06;
+  const noiseSrc = audioCtx.createBufferSource();
+  noiseSrc.buffer = noiseBuf;
+
+  // Noise envelope: burst of breath at onset then fade
+  const noiseEnv = audioCtx.createGain();
+  noiseEnv.gain.setValueAtTime(0.8, now);
+  noiseEnv.gain.exponentialRampToValueAtTime(0.15, now + adsr.a * 0.5);
+  noiseEnv.gain.linearRampToValueAtTime(0.08, now + totalDur);
+  noiseSrc.connect(noiseEnv);
+  noiseEnv.connect(sourceGain);
+  noiseSrc.start(now);
+  noiseSrc.stop(now + totalDur);
+
+  // Vocal tract: 3 parallel formant filters (F1, F2, F3)
+  const formantMix = audioCtx.createGain();
+  formantMix.gain.value = 1;
+
+  for (let i = 0; i < 3; i++) {
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = vowel.f[i];
+    bp.Q.value = vowel.f[i] / vowel.bw[i];
+
+    // Gain weighting: F1 loudest, F2 medium, F3 quieter
+    const fGain = audioCtx.createGain();
+    fGain.gain.value = i === 0 ? 1.0 : i === 1 ? 0.7 : 0.4;
+
+    sourceGain.connect(bp);
+    bp.connect(fGain);
+    fGain.connect(formantMix);
+  }
+
+  // ADSR envelope
+  const env = audioCtx.createGain();
+  env.gain.setValueAtTime(0.001, now);
+  env.gain.linearRampToValueAtTime(peak, now + adsr.a);
+  env.gain.linearRampToValueAtTime(peak * adsr.s, now + adsr.a + adsr.d);
+  env.gain.linearRampToValueAtTime(0.001, now + adsr.a + adsr.d + adsr.r);
+
+  formantMix.connect(env);
+  env.connect(masterGain || audioCtx.destination);
 }
 </script>
 </body>
