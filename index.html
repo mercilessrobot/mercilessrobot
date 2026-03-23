@@ -452,6 +452,58 @@ body::after {
   background: rgba(212, 137, 10, 0.2);
 }
 
+/* Phobos sliders */
+.union-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.union-slider-group .seq-ctrl-label {
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+.union-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.union-slider-val {
+  font-size: 1.1rem;
+  min-width: 50px;
+  text-align: right;
+  opacity: 0.8;
+}
+input[type="range"].union-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 140px;
+  height: 4px;
+  background: var(--amber-dim);
+  outline: none;
+  cursor: none;
+  border-radius: 0;
+}
+input[type="range"].union-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 24px;
+  background: var(--amber);
+  border: 1px solid var(--amber);
+  cursor: none;
+  box-shadow: 0 0 6px var(--amber-glow);
+}
+input[type="range"].union-range::-moz-range-thumb {
+  width: 14px;
+  height: 24px;
+  background: var(--amber);
+  border: 1px solid var(--amber);
+  cursor: none;
+  box-shadow: 0 0 6px var(--amber-glow);
+  border-radius: 0;
+}
+
 .seq-row {
   display: flex;
   gap: 6px;
@@ -761,6 +813,7 @@ body::after {
     <div class="help-list-item">PENITENCE</div>
     <div class="help-list-item">ABSOLVE</div>
     <div class="help-list-item">ASCEND</div>
+    <div class="help-list-item">UNION</div>
     <br>
     <div>TYPE A PROGRAM NAME TO LAUNCH IT OR COMMANDS TO SEE A LIST OF AVAILABLE COMMANDS</div>
     <br>
@@ -779,6 +832,7 @@ body::after {
     <div class="help-list-item">PENITENCE</div>
     <div class="help-list-item">ABSOLVE</div>
     <div class="help-list-item">ASCEND</div>
+    <div class="help-list-item">UNION</div>
     <div class="help-list-item">PHOTO</div>
     <div class="help-list-item">PLAY</div>
     <div class="help-list-item">STOP</div>
@@ -818,12 +872,6 @@ body::after {
     <div>PENITENCE</div>
     <br>
     <div class="seq-controls">
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">TEMPO</div><input type="text" id="pen-tempo" value="140"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">ATTACK</div><input type="text" id="pen-attack" value="0.02"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">DECAY</div><input type="text" id="pen-decay-ctrl" value="0.15"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">SUSTAIN</div><input type="text" id="pen-sustain" value="0.3"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">RELEASE</div><input type="text" id="pen-release" value="0.2"></div>
-      <div class="seq-ctrl-spacer"></div>
       <div class="seq-ctrl-group">
         <div class="seq-ctrl-label">PATTERN</div>
         <button id="pen-pattern-btn" onclick="penCyclePattern()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;min-width:112px;">UP</button>
@@ -833,7 +881,7 @@ body::after {
     <br>
     <div id="pen-keyboard" style="display:flex;flex-direction:column;align-items:center;gap:4px;"></div>
     <br>
-    <div id="pen-held-display" style="min-height:2em;opacity:0.6;">HOLD KEYS TO ARPEGGIATE</div>
+    <div id="pen-held-display" style="min-height:2em;opacity:0.6;">PRESS KEYS TO ARPEGGIATE</div>
     <br>
     <button class="esc-btn" data-overlay="penitence-overlay">ESC</button>
   </div>
@@ -845,12 +893,6 @@ body::after {
     <div>ABSOLVE</div>
     <br>
     <div class="seq-controls">
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">TEMPO</div><input type="text" id="seq-tempo" value="120"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">ATTACK</div><input type="text" id="seq-attack" value="0.01"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">DECAY</div><input type="text" id="seq-decay-ctrl" value="0.1"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">SUSTAIN</div><input type="text" id="seq-sustain" value="0.3"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">RELEASE</div><input type="text" id="seq-release" value="0.1"></div>
-      <div class="seq-ctrl-spacer"></div>
       <div class="seq-ctrl-group"><button id="seq-play-btn" onclick="seqTogglePlay()">PLAY</button></div>
       <div class="seq-ctrl-group"><button onclick="seqClear()">CLEAR</button></div>
     </div>
@@ -866,12 +908,6 @@ body::after {
     <div>ASCEND</div>
     <br>
     <div class="seq-controls">
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">TEMPO</div><input type="text" id="asc-tempo" value="80"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">ATTACK</div><input type="text" id="asc-attack" value="0.15"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">DECAY</div><input type="text" id="asc-decay-ctrl" value="0.3"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">SUSTAIN</div><input type="text" id="asc-sustain" value="0.6"></div>
-      <div class="seq-ctrl-group"><div class="seq-ctrl-label">RELEASE</div><input type="text" id="asc-release" value="0.5"></div>
-      <div class="seq-ctrl-spacer"></div>
       <div class="seq-ctrl-group"><button id="asc-play-btn" onclick="ascTogglePlay()">PLAY</button></div>
       <div class="seq-ctrl-group"><button onclick="ascClear()">CLEAR</button></div>
     </div>
@@ -879,6 +915,83 @@ body::after {
     <div class="seq-playhead" id="asc-playhead"></div>
     <br>
     <button class="esc-btn" data-overlay="ascend-overlay">ESC</button>
+  </div>
+</div>
+
+<!-- Phobos (shared controls) overlay -->
+<div id="union-overlay" class="overlay-panel">
+  <div class="overlay-content" style="max-width:none;line-height:1.4;">
+    <div>UNION</div>
+    <br>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;">
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">TEMPO</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-tempo" min="20" max="300" step="1" value="120">
+          <span class="union-slider-val" id="union-tempo-val">120</span>
+        </div>
+      </div>
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">ATTACK</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-attack" min="0" max="1" step="0.01" value="0.01">
+          <span class="union-slider-val" id="union-attack-val">0.01</span>
+        </div>
+      </div>
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">DECAY</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-decay" min="0" max="1" step="0.01" value="0.1">
+          <span class="union-slider-val" id="union-decay-val">0.10</span>
+        </div>
+      </div>
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">SUSTAIN</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-sustain" min="0" max="1" step="0.01" value="0.3">
+          <span class="union-slider-val" id="union-sustain-val">0.30</span>
+        </div>
+      </div>
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">RELEASE</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-release" min="0" max="1" step="0.01" value="0.1">
+          <span class="union-slider-val" id="union-release-val">0.10</span>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;">
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">PENITENCE VOL</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-vol-pen" min="0" max="1" step="0.01" value="0.80">
+          <span class="union-slider-val" id="union-vol-pen-val">0.80</span>
+        </div>
+      </div>
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">ABSOLVE VOL</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-vol-seq" min="0" max="1" step="0.01" value="0.80">
+          <span class="union-slider-val" id="union-vol-seq-val">0.80</span>
+        </div>
+      </div>
+      <div class="union-slider-group">
+        <div class="seq-ctrl-label">ASCEND VOL</div>
+        <div class="union-slider-row">
+          <input type="range" class="union-range" id="union-vol-asc" min="0" max="1" step="0.01" value="0.80">
+          <span class="union-slider-val" id="union-vol-asc-val">0.80</span>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <button id="union-reticle-fx" onclick="toggleReticleFx()" style="background:var(--amber);color:var(--bg);border:1px solid var(--amber);font-family:inherit;font-size:inherit;padding:8px 16px;cursor:none;min-width:180px;">RETICLE FX: ON</button>
+    </div>
+    <br>
+    <div style="opacity:0.6;">CONTROLS TEMPO, ENVELOPE, AND VOLUME FOR ALL INSTRUMENTS</div>
+    <br>
+    <button class="esc-btn" data-overlay="union-overlay">ESC</button>
   </div>
 </div>
 
@@ -1068,6 +1181,11 @@ const commands = {
   ascend: () => {
     showOverlay('ascend-overlay');
     ascInit();
+    return [];
+  },
+
+  union: () => {
+    showOverlay('union-overlay');
     return [];
   },
 
@@ -1395,6 +1513,16 @@ function collapsePhoto() {
   bgLayer.classList.remove('zoomed-out-deep');
   bgLayer.classList.add('zoomed-out');
   playCloseSound();
+}
+
+function toggleReticleFx() {
+  window._reticleFxEnabled = !window._reticleFxEnabled;
+  const btn = document.getElementById('union-reticle-fx');
+  if (btn) {
+    btn.textContent = 'RETICLE FX: ' + (window._reticleFxEnabled ? 'ON' : 'OFF');
+    btn.style.background = window._reticleFxEnabled ? 'var(--amber)' : 'transparent';
+    btn.style.color = window._reticleFxEnabled ? 'var(--bg)' : 'var(--amber)';
+  }
 }
 
 function playSlideSound() {
@@ -1872,6 +2000,9 @@ resetIdleTimer();
 let audioStarted = false;
 let audioCtx;
 let masterGain = null;
+let penVolGain = null;
+let seqVolGain = null;
+let ascVolGain = null;
 let soundEnabled = true;
 
 function startAmbientAudio() {
@@ -1885,6 +2016,19 @@ function startAmbientAudio() {
   master.gain.value = soundEnabled ? 0.15 : 0;
   master.connect(audioCtx.destination);
   masterGain = master;
+
+  // Per-instrument volume nodes
+  penVolGain = audioCtx.createGain();
+  penVolGain.gain.value = 0.8;
+  penVolGain.connect(master);
+
+  seqVolGain = audioCtx.createGain();
+  seqVolGain.gain.value = 0.8;
+  seqVolGain.connect(master);
+
+  ascVolGain = audioCtx.createGain();
+  ascVolGain.gain.value = 0.8;
+  ascVolGain.connect(master);
 
   // ── CRT Monitor Hum (60Hz fundamental + harmonics) ──
   const humGain = audioCtx.createGain();
@@ -1934,6 +2078,7 @@ function startAmbientAudio() {
   // Global reticle position for sequencer modulation
   window._reticleX = 0.5;
   window._reticleY = 0.5;
+  window._reticleFxEnabled = true;
 
   document.addEventListener('mousemove', (e) => {
     if (!audioCtx || !soundEnabled) return;
@@ -1942,17 +2087,25 @@ function startAmbientAudio() {
     window._reticleX = normX;
     window._reticleY = normY;
 
-    // Pitch: 50Hz (bottom) to 80Hz (top)
-    const freq = 80 - normY * 30;
-    hum60.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
-    hum120.frequency.setTargetAtTime(freq * 2, audioCtx.currentTime, 0.1);
-    hum180.frequency.setTargetAtTime(freq * 3, audioCtx.currentTime, 0.1);
+    if (window._reticleFxEnabled) {
+      // Pitch: 50Hz (bottom) to 80Hz (top)
+      const freq = 80 - normY * 30;
+      hum60.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
+      hum120.frequency.setTargetAtTime(freq * 2, audioCtx.currentTime, 0.1);
+      hum180.frequency.setTargetAtTime(freq * 3, audioCtx.currentTime, 0.1);
 
-    // Horizontal: LFO rate 0 (left) to 12Hz (right) for "wub wub" wobble
-    const lfoRate = normX * 12;
-    const lfoDepth = normX * 0.3; // deeper wobble toward right
-    lfo.frequency.setTargetAtTime(lfoRate, audioCtx.currentTime, 0.1);
-    lfoGain.gain.setTargetAtTime(lfoDepth, audioCtx.currentTime, 0.1);
+      // Horizontal: LFO rate 0 (left) to 12Hz (right) for "wub wub" wobble
+      const lfoRate = normX * 12;
+      const lfoDepth = normX * 0.3;
+      lfo.frequency.setTargetAtTime(lfoRate, audioCtx.currentTime, 0.1);
+      lfoGain.gain.setTargetAtTime(lfoDepth, audioCtx.currentTime, 0.1);
+    } else {
+      hum60.frequency.setTargetAtTime(60, audioCtx.currentTime, 0.1);
+      hum120.frequency.setTargetAtTime(120, audioCtx.currentTime, 0.1);
+      hum180.frequency.setTargetAtTime(180, audioCtx.currentTime, 0.1);
+      lfo.frequency.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+      lfoGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+    }
   });
 
   // High-frequency CRT whine (15.7kHz — horizontal scan frequency)
@@ -2158,27 +2311,24 @@ function penInit() {
       `;
       key.addEventListener('mousedown', (ev) => {
         ev.preventDefault();
-        penKeyDown(k);
+        penToggleKey(k);
       });
-      key.addEventListener('mouseup', () => penKeyUp(k));
       row.appendChild(key);
     });
     kb.appendChild(row);
   });
 }
 
-function penKeyDown(k) {
-  if (!PEN_KEY_MAP[k] || penHeldKeys.has(k)) return;
-  penHeldKeys.add(k);
+function penToggleKey(k) {
+  if (!PEN_KEY_MAP[k]) return;
   const el = document.getElementById('pen-key-' + k);
-  if (el) { el.style.background = 'var(--amber)'; el.style.color = 'var(--bg)'; }
-  penUpdateArp();
-}
-
-function penKeyUp(k) {
-  penHeldKeys.delete(k);
-  const el = document.getElementById('pen-key-' + k);
-  if (el) { el.style.background = 'transparent'; el.style.color = 'var(--amber)'; }
+  if (penHeldKeys.has(k)) {
+    penHeldKeys.delete(k);
+    if (el) { el.style.background = 'transparent'; el.style.color = 'var(--amber)'; }
+  } else {
+    penHeldKeys.add(k);
+    if (el) { el.style.background = 'var(--amber)'; el.style.color = 'var(--bg)'; }
+  }
   penUpdateArp();
 }
 
@@ -2191,7 +2341,7 @@ function penUpdateArp() {
 
   const display = document.getElementById('pen-held-display');
   if (penArpNotes.length === 0) {
-    display.textContent = 'HOLD KEYS TO ARPEGGIATE';
+    display.textContent = 'PRESS KEYS TO ARPEGGIATE';
     display.style.opacity = '0.6';
     if (penArpRunning) {
       clearInterval(penArpInterval);
@@ -2219,7 +2369,7 @@ function penUpdateArp() {
 
 function penStartInterval() {
   clearInterval(penArpInterval);
-  const bpm = parseInt(document.getElementById('pen-tempo').value) || 140;
+  const bpm = parseInt(document.getElementById('union-tempo').value) || 120;
   const msPerStep = (60000 / bpm) / 4;
   penArpInterval = setInterval(penArpTick, msPerStep);
 }
@@ -2266,14 +2416,14 @@ function penPlayNote(note) {
   if (!audioCtx || !soundEnabled) return;
   const now = audioCtx.currentTime;
 
-  const a = parseFloat(document.getElementById('pen-attack').value) || 0.02;
-  const d = parseFloat(document.getElementById('pen-decay-ctrl').value) || 0.15;
-  const s = parseFloat(document.getElementById('pen-sustain').value) || 0.3;
-  const r = parseFloat(document.getElementById('pen-release').value) || 0.2;
+  const a = parseFloat(document.getElementById('union-attack').value) || 0.01;
+  const d = parseFloat(document.getElementById('union-decay').value) || 0.1;
+  const s = parseFloat(document.getElementById('union-sustain').value) || 0.3;
+  const r = parseFloat(document.getElementById('union-release').value) || 0.1;
   const totalDur = a + d + r + 0.05;
 
-  const rx = window._reticleX || 0.5;
-  const ry = window._reticleY || 0.5;
+  const rx = window._reticleFxEnabled ? (window._reticleX || 0.5) : 0.5;
+  const ry = window._reticleFxEnabled ? (window._reticleY || 0.5) : 0.5;
   const pitchShift = Math.pow(2, (ry - 0.5) * -0.3);
   const wobbleRate = rx * 10;
   const wobbleDepth = rx * 30;
@@ -2323,7 +2473,7 @@ function penPlayNote(note) {
   sub.connect(mix);
   mix.connect(filter);
   filter.connect(env);
-  env.connect(masterGain || audioCtx.destination);
+  env.connect(penVolGain || masterGain || audioCtx.destination);
 
   osc1.start(now);
   osc1.stop(now + totalDur);
@@ -2341,7 +2491,10 @@ function penCyclePattern() {
 }
 
 function penClearNotes() {
-  penHeldKeys.forEach(k => penKeyUp(k));
+  penHeldKeys.forEach(k => {
+    const el = document.getElementById('pen-key-' + k);
+    if (el) { el.style.background = 'transparent'; el.style.color = 'var(--amber)'; }
+  });
   penHeldKeys.clear();
   penUpdateArp();
 }
@@ -2355,14 +2508,8 @@ document.addEventListener('keydown', (e) => {
   if (PEN_KEY_MAP[k]) {
     e.preventDefault();
     e.stopPropagation();
-    penKeyDown(k);
+    penToggleKey(k);
   }
-});
-
-document.addEventListener('keyup', (e) => {
-  if (!penInited) return;
-  const k = e.key.toLowerCase();
-  if (PEN_KEY_MAP[k]) penKeyUp(k);
 });
 
 /* ═══════════════════════════════════════════
@@ -2406,7 +2553,7 @@ function masterStart() {
   masterPlaying = true;
   masterStep = 0;
   masterTick();
-  const bpm = parseInt(document.getElementById('seq-tempo').value || document.getElementById('asc-tempo').value) || 120;
+  const bpm = parseInt(document.getElementById('union-tempo').value) || 120;
   const msPerStep = (60000 / bpm) / 4;
   masterInterval = setInterval(masterTick, msPerStep);
 }
@@ -2420,7 +2567,7 @@ function masterStop() {
 function masterUpdateTempo() {
   if (!masterPlaying) return;
   clearInterval(masterInterval);
-  const bpm = parseInt(document.getElementById('seq-tempo').value || document.getElementById('asc-tempo').value) || 120;
+  const bpm = parseInt(document.getElementById('union-tempo').value) || 120;
   const msPerStep = (60000 / bpm) / 4;
   masterInterval = setInterval(masterTick, msPerStep);
 }
@@ -2437,7 +2584,7 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
   e.stopPropagation();
 
-  const isAdsr = ['seq-attack', 'seq-decay-ctrl', 'seq-sustain', 'seq-release', 'asc-attack', 'asc-decay-ctrl', 'asc-sustain', 'asc-release', 'pen-attack', 'pen-decay-ctrl', 'pen-sustain', 'pen-release'].includes(el.id);
+  const isAdsr = false; // union uses range sliders now
   const step = isAdsr ? 0.01 : 5;
   let val = parseFloat(el.value) || 0;
 
@@ -2451,8 +2598,25 @@ document.addEventListener('keydown', (e) => {
   }
 
   el.value = val;
-  if (el.id === 'seq-tempo' || el.id === 'asc-tempo') masterUpdateTempo();
-  if (el.id === 'pen-tempo') penUpdateTempo();
+  if (el.id === 'union-tempo') { masterUpdateTempo(); penUpdateTempo(); }
+});
+
+// Phobos slider listeners — update values and readouts
+['union-tempo', 'union-attack', 'union-decay', 'union-sustain', 'union-release',
+ 'union-vol-pen', 'union-vol-seq', 'union-vol-asc'].forEach(id => {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById(id + '-val');
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    if (valEl) valEl.textContent = id === 'union-tempo' ? Math.round(v) : v.toFixed(2);
+    if (id === 'union-tempo') {
+      clearTimeout(window._tempoDebounce);
+      window._tempoDebounce = setTimeout(() => { masterUpdateTempo(); penUpdateTempo(); }, 80);
+    }
+    if (id === 'union-vol-pen' && penVolGain) penVolGain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+    if (id === 'union-vol-seq' && seqVolGain) seqVolGain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+    if (id === 'union-vol-asc' && ascVolGain) ascVolGain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+  });
 });
 
 function seqInit() {
@@ -2562,11 +2726,6 @@ function seqClear() {
     }
   }
   document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('on'));
-  document.getElementById('seq-tempo').value = '120';
-  document.getElementById('seq-attack').value = '0.01';
-  document.getElementById('seq-decay-ctrl').value = '0.1';
-  document.getElementById('seq-sustain').value = '0.3';
-  document.getElementById('seq-release').value = '0.1';
 }
 
 function seqTickAt(step) {
@@ -2589,10 +2748,10 @@ function seqClampADSR(el) {
 
 function seqGetADSR() {
   return {
-    a: seqClampADSR(document.getElementById('seq-attack')) || 0.01,
-    d: seqClampADSR(document.getElementById('seq-decay-ctrl')) || 0.1,
-    s: seqClampADSR(document.getElementById('seq-sustain')) || 0.3,
-    r: seqClampADSR(document.getElementById('seq-release')) || 0.1,
+    a: parseFloat(document.getElementById('union-attack').value) || 0.01,
+    d: parseFloat(document.getElementById('union-decay').value) || 0.1,
+    s: parseFloat(document.getElementById('union-sustain').value) || 0.3,
+    r: parseFloat(document.getElementById('union-release').value) || 0.1,
   };
 }
 
@@ -2604,9 +2763,9 @@ function seqPlaySound(row) {
   const peak = 0.5;
 
   // Reticle modulation
-  const rx = window._reticleX || 0.5;
-  const ry = window._reticleY || 0.5;
-  const pitchShift = Math.pow(2, (ry - 0.5) * -0.5); // subtler for beats: half octave range
+  const rx = window._reticleFxEnabled ? (window._reticleX || 0.5) : 0.5;
+  const ry = window._reticleFxEnabled ? (window._reticleY || 0.5) : 0.5;
+  const pitchShift = Math.pow(2, (ry - 0.5) * -0.5);
   const wobbleRate = rx * 10;
   const wobbleDepth = rx * 40;
 
@@ -2693,7 +2852,7 @@ function seqPlaySound(row) {
     bodyEnv.connect(shaper);
     clickEnv.connect(shaper);
 
-    shaper.connect(masterGain || audioCtx.destination);
+    shaper.connect(seqVolGain || masterGain || audioCtx.destination);
 
     sub.start(now);
     sub.stop(now + kickDur);
@@ -2722,7 +2881,7 @@ function seqPlaySound(row) {
 
     src.connect(filt);
     filt.connect(env);
-    env.connect(masterGain || audioCtx.destination);
+    env.connect(seqVolGain || masterGain || audioCtx.destination);
     src.start(now);
     src.stop(now + totalDur);
   } else {
@@ -2743,7 +2902,7 @@ function seqPlaySound(row) {
     wobLfo.stop(now + totalDur);
 
     osc.connect(env);
-    env.connect(masterGain || audioCtx.destination);
+    env.connect(seqVolGain || masterGain || audioCtx.destination);
     osc.start(now);
     osc.stop(now + totalDur);
   }
@@ -2881,11 +3040,6 @@ function ascClear() {
     }
   }
   document.querySelectorAll('#asc-grid .seq-cell').forEach(c => c.classList.remove('on'));
-  document.getElementById('asc-tempo').value = '80';
-  document.getElementById('asc-attack').value = '0.15';
-  document.getElementById('asc-decay-ctrl').value = '0.3';
-  document.getElementById('asc-sustain').value = '0.6';
-  document.getElementById('asc-release').value = '0.5';
 }
 
 function ascTickAt(step) {
@@ -2907,10 +3061,10 @@ function ascGetADSR() {
     return v;
   };
   return {
-    a: clamp('asc-attack') || 0.15,
-    d: clamp('asc-decay-ctrl') || 0.3,
-    s: clamp('asc-sustain') || 0.6,
-    r: clamp('asc-release') || 0.5,
+    a: parseFloat(document.getElementById('union-attack').value) || 0.01,
+    d: parseFloat(document.getElementById('union-decay').value) || 0.1,
+    s: parseFloat(document.getElementById('union-sustain').value) || 0.3,
+    r: parseFloat(document.getElementById('union-release').value) || 0.1,
   };
 }
 
@@ -2927,11 +3081,11 @@ function ascPlaySound(row) {
   sourceGain.gain.value = row.type === 'drone' ? 0.3 : 0.15;
 
   // Reticle modulation: Y = pitch shift (-1 to +1 octave), X = wobble rate
-  const rx = window._reticleX || 0.5;
-  const ry = window._reticleY || 0.5;
-  const pitchShift = Math.pow(2, (ry - 0.5) * -1); // top = octave up, bottom = octave down
-  const wobbleRate = rx * 14; // 0-14Hz wobble from reticle X
-  const wobbleDepth = rx * 60; // deeper wobble toward right (in cents)
+  const rx = window._reticleFxEnabled ? (window._reticleX || 0.5) : 0.5;
+  const ry = window._reticleFxEnabled ? (window._reticleY || 0.5) : 0.5;
+  const pitchShift = Math.pow(2, (ry - 0.5) * -1);
+  const wobbleRate = rx * 14;
+  const wobbleDepth = rx * 60;
 
   // Detuned voices — use sine/triangle mix for softer, breathier tone
   const detunings = [-12, -5, 0, 5, 12];
@@ -3014,7 +3168,7 @@ function ascPlaySound(row) {
   env.gain.linearRampToValueAtTime(0.001, now + adsr.a + adsr.d + adsr.r);
 
   formantMix.connect(env);
-  env.connect(masterGain || audioCtx.destination);
+  env.connect(ascVolGain || masterGain || audioCtx.destination);
 }
 </script>
 </body>
