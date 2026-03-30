@@ -586,8 +586,77 @@ input[type="range"].union-range::-moz-range-thumb {
   pointer-events: auto;
 }
 
+/* Window frame */
+.window-frame {
+  border: 2px solid var(--amber);
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+}
+
+.window-titlebar {
+  display: flex;
+  align-items: stretch;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.window-titlebar-lines {
+  flex: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 4px,
+    var(--amber) 4px,
+    var(--amber) 6px
+  );
+  opacity: 0.8;
+}
+
+.window-title {
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  padding: 0 16px;
+  color: var(--bg-dark);
+  background: var(--amber);
+  display: flex;
+  align-items: center;
+  text-shadow: none;
+}
+
+.window-close-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-left: 2px solid var(--amber);
+  background: transparent;
+  color: var(--amber);
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  line-height: 1;
+}
+
+.window-close-btn:hover {
+  background: rgba(212, 137, 10, 0.15);
+}
+
+.window-body {
+  padding: 40px;
+  overflow-y: auto;
+  border-top: 2px solid var(--amber);
+}
+
 .overlay-content {
-  padding: 0 32px;
   max-width: 700px;
   font-size: 1.4rem;
   letter-spacing: 0.1em;
@@ -606,29 +675,6 @@ input[type="range"].union-range::-moz-range-thumb {
 
 .overlay-content .help-list-item::before {
   content: '· ';
-}
-
-.esc-btn {
-  display: inline-block;
-  margin-top: 1.5em;
-  padding: 4px 12px;
-  border: 1px solid var(--amber-dim);
-  color: var(--amber);
-  font-family: 'Kode Mono', monospace;
-  font-size: 1.4rem;
-  letter-spacing: 0.1em;
-  background: transparent;
-  cursor: none;
-  text-shadow:
-    0 0 4px rgba(212, 137, 10, 0.8),
-    10px 0 12px rgba(212, 137, 10, 0.15),
-    -10px 0 12px rgba(212, 137, 10, 0.15);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.esc-btn:hover {
-  border-color: var(--amber);
-  box-shadow: 0 0 8px rgba(212, 137, 10, 0.3);
 }
 
 /* Background layer — wraps interface, corners, status for unified blur */
@@ -805,62 +851,81 @@ input[type="range"].union-range::-moz-range-thumb {
 
 <!-- Help overlay (outside bg-layer so it doesn't blur) -->
 <div id="help-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>mOS v1.0</div>
-    <div>ROBOT INDUSTRIES</div>
-    <br>
-    <div>AVAILABLE PROGRAMS:</div>
-    <div class="help-list-item">PENITENCE</div>
-    <div class="help-list-item">ABSOLVE</div>
-    <div class="help-list-item">ASCEND</div>
-    <div class="help-list-item">UNION</div>
-    <br>
-    <div>TYPE A PROGRAM NAME TO LAUNCH IT OR COMMANDS TO SEE A LIST OF AVAILABLE COMMANDS</div>
-    <br>
-    <button class="esc-btn" data-overlay="help-overlay">ESC</button>
+  <div class="window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">HELP</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="help-overlay">&#10005;</button>
+    </div>
+    <div class="window-body">
+      <div class="overlay-content">
+        <div>mOS v1.0</div>
+        <div>ROBOT INDUSTRIES</div>
+        <br>
+        <div>AVAILABLE PROGRAMS:</div>
+        <div class="help-list-item">PENITENCE</div>
+        <div class="help-list-item">ABSOLVE</div>
+        <div class="help-list-item">ASCEND</div>
+        <div class="help-list-item">UNION</div>
+        <br>
+        <div>TYPE A PROGRAM NAME TO LAUNCH IT OR COMMANDS TO SEE A LIST OF AVAILABLE COMMANDS</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Status overlay -->
 <!-- Commands overlay -->
 <div id="commands-overlay" class="overlay-panel">
-  <div class="overlay-content">
-    <div>AVAILABLE COMMANDS</div>
-    <br>
-    <div class="help-list-item">HELP</div>
-    <div class="help-list-item">COMMANDS</div>
-    <div class="help-list-item">PENITENCE</div>
-    <div class="help-list-item">ABSOLVE</div>
-    <div class="help-list-item">ASCEND</div>
-    <div class="help-list-item">UNION</div>
-    <div class="help-list-item">PHOTO</div>
-    <div class="help-list-item">PLAY</div>
-    <div class="help-list-item">STOP</div>
-    <div class="help-list-item">DATE</div>
-    <div class="help-list-item">CLEAR</div>
-    <div class="help-list-item">SOUND ON</div>
-    <div class="help-list-item">SOUND OFF</div>
-    <br>
-    <button class="esc-btn" data-overlay="commands-overlay">ESC</button>
+  <div class="window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">COMMANDS</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="commands-overlay">&#10005;</button>
+    </div>
+    <div class="window-body">
+      <div class="overlay-content">
+        <div class="help-list-item">HELP</div>
+        <div class="help-list-item">COMMANDS</div>
+        <div class="help-list-item">PENITENCE</div>
+        <div class="help-list-item">ABSOLVE</div>
+        <div class="help-list-item">ASCEND</div>
+        <div class="help-list-item">UNION</div>
+        <div class="help-list-item">PHOTO</div>
+        <div class="help-list-item">PLAY</div>
+        <div class="help-list-item">STOP</div>
+        <div class="help-list-item">DATE</div>
+        <div class="help-list-item">CLEAR</div>
+        <div class="help-list-item">SOUND ON</div>
+        <div class="help-list-item">SOUND OFF</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Photo overlay -->
-<div id="photo-overlay" class="overlay-panel" style="overflow-y:auto;">
-  <div class="overlay-content" style="display:flex;flex-direction:column;align-items:center;max-width:90vw;">
-    <div id="dither-grid-wrap" style="transition:filter 0.5s ease,transform 0.5s ease,opacity 0.5s ease;">
-      <div id="dither-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px 0;"></div>
-      <div style="text-align:center;"><button class="esc-btn" data-overlay="photo-overlay">ESC</button></div>
+<div id="photo-overlay" class="overlay-panel">
+  <div class="window-frame" style="max-width:95vw;max-height:95vh;">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">PHOTO</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="photo-overlay">&#10005;</button>
     </div>
-    <div id="photo-expanded" style="display:none;position:fixed;inset:0;z-index:9500;align-items:center;justify-content:center;flex-direction:row;">
-      <button id="photo-prev" onclick="expandPrev()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:2rem;padding:12px 16px;cursor:none;margin-right:20px;opacity:0.6;transition:opacity 0.2s;">&#9664;</button>
-      <div style="display:flex;flex-direction:column;align-items:center;">
-        <canvas id="expanded-canvas" style="border:2px solid var(--amber);max-width:70vw;max-height:70vh;image-rendering:pixelated;cursor:none;"></canvas>
-        <div id="expanded-label" style="margin-top:12px;font-size:1.4rem;letter-spacing:0.1em;"></div>
-        <br>
-        <button class="esc-btn" onclick="collapsePhoto()" style="cursor:none;">ESC</button>
+    <div class="window-body" style="overflow-y:auto;">
+      <div id="dither-grid-wrap" style="transition:filter 0.5s ease,transform 0.5s ease,opacity 0.5s ease;">
+        <div id="dither-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;"></div>
       </div>
-      <button id="photo-next" onclick="expandNext()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:2rem;padding:12px 16px;cursor:none;margin-left:20px;opacity:0.6;transition:opacity 0.2s;">&#9654;</button>
+      <div id="photo-expanded" style="display:none;position:fixed;inset:0;z-index:9500;align-items:center;justify-content:center;flex-direction:row;">
+        <button id="photo-prev" onclick="expandPrev()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:2rem;padding:12px 16px;cursor:none;margin-right:20px;opacity:0.6;transition:opacity 0.2s;">&#9664;</button>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <canvas id="expanded-canvas" style="border:2px solid var(--amber);max-width:70vw;max-height:70vh;image-rendering:pixelated;cursor:none;"></canvas>
+          <div id="expanded-label" style="margin-top:12px;font-size:1.4rem;letter-spacing:0.1em;"></div>
+        </div>
+        <button id="photo-next" onclick="expandNext()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:2rem;padding:12px 16px;cursor:none;margin-left:20px;opacity:0.6;transition:opacity 0.2s;">&#9654;</button>
+      </div>
     </div>
   </div>
 </div>
@@ -868,139 +933,169 @@ input[type="range"].union-range::-moz-range-thumb {
 
 <!-- Penitence (arpeggiator) overlay -->
 <div id="penitence-overlay" class="overlay-panel">
-  <div class="overlay-content" style="max-width:none;line-height:1.4;">
-    <div>PENITENCE</div>
-    <br>
-    <div class="seq-controls">
-      <div class="seq-ctrl-group">
-        <div class="seq-ctrl-label">PATTERN</div>
-        <button id="pen-pattern-btn" onclick="penCyclePattern()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;min-width:112px;">UP</button>
-      </div>
-      <div class="seq-ctrl-group"><button onclick="penClearNotes()">CLEAR</button></div>
+  <div class="window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">PENITENCE</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="penitence-overlay">&#10005;</button>
     </div>
-    <br>
-    <div id="pen-keyboard" style="display:flex;flex-direction:column;align-items:center;gap:4px;"></div>
-    <br>
-    <div id="pen-held-display" style="min-height:2em;opacity:0.6;">PRESS KEYS TO ARPEGGIATE</div>
-    <br>
-    <button class="esc-btn" data-overlay="penitence-overlay">ESC</button>
+    <div class="window-body">
+      <div class="overlay-content" style="max-width:none;line-height:1.4;">
+        <div class="seq-controls">
+          <div class="seq-ctrl-group">
+            <div class="seq-ctrl-label">PATTERN</div>
+            <button id="pen-pattern-btn" onclick="penCyclePattern()" style="background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;min-width:112px;">UP</button>
+          </div>
+          <div class="seq-ctrl-group"><button onclick="penClearNotes()">CLEAR</button></div>
+        </div>
+        <br>
+        <div id="pen-keyboard" style="display:flex;flex-direction:column;align-items:center;gap:4px;"></div>
+        <br>
+        <div id="pen-held-display" style="min-height:2em;opacity:0.6;">PRESS KEYS TO ARPEGGIATE</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Absolve (beat sequencer) overlay -->
 <div id="absolve-overlay" class="overlay-panel">
-  <div class="overlay-content" style="max-width:none;line-height:1.4;">
-    <div>ABSOLVE</div>
-    <br>
-    <div class="seq-controls">
-      <div class="seq-ctrl-group">
-        <div class="seq-ctrl-label">KIT</div>
-        <select id="seq-kit-select" onchange="seqChangeKit(this.value)" style="background:var(--bg);color:var(--amber);border:1px solid var(--amber-dim);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;-webkit-appearance:none;appearance:none;">
-          <option value="default">mOS</option>
-          <option value="808">TR-808</option>
-          <option value="909">TR-909</option>
-          <option value="303">TB-303</option>
-        </select>
-      </div>
-      <div class="seq-ctrl-group"><button id="seq-play-btn" onclick="seqTogglePlay()">PLAY</button></div>
-      <div class="seq-ctrl-group"><button onclick="seqClear()">CLEAR</button></div>
+  <div class="window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">ABSOLVE</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="absolve-overlay">&#10005;</button>
     </div>
-    <div class="seq-container" id="seq-grid"></div>
-    <div class="seq-playhead" id="seq-playhead"></div>
-    <br>
-    <button class="esc-btn" data-overlay="absolve-overlay">ESC</button>
+    <div class="window-body">
+      <div class="overlay-content" style="max-width:none;line-height:1.4;">
+        <div class="seq-controls">
+          <div class="seq-ctrl-group">
+            <div class="seq-ctrl-label">KIT</div>
+            <select id="seq-kit-select" onchange="seqChangeKit(this.value)" style="background:var(--bg);color:var(--amber);border:1px solid var(--amber-dim);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;-webkit-appearance:none;appearance:none;">
+              <option value="default">mOS</option>
+              <option value="808">TR-808</option>
+              <option value="909">TR-909</option>
+            </select>
+          </div>
+          <div class="seq-ctrl-group"><button id="seq-play-btn" onclick="seqTogglePlay()">PLAY</button></div>
+          <div class="seq-ctrl-group"><button onclick="seqClear()">CLEAR</button></div>
+        </div>
+        <div class="seq-container" id="seq-grid"></div>
+        <div class="seq-playhead" id="seq-playhead"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div id="ascend-overlay" class="overlay-panel">
-  <div class="overlay-content" style="max-width:none;line-height:1.4;">
-    <div>ASCEND</div>
-    <br>
-    <div class="seq-controls">
-      <div class="seq-ctrl-group"><button id="asc-play-btn" onclick="ascTogglePlay()">PLAY</button></div>
-      <div class="seq-ctrl-group"><button onclick="ascClear()">CLEAR</button></div>
+  <div class="window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">ASCEND</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="ascend-overlay">&#10005;</button>
     </div>
-    <div class="seq-container" id="asc-grid"></div>
-    <div class="seq-playhead" id="asc-playhead"></div>
-    <br>
-    <button class="esc-btn" data-overlay="ascend-overlay">ESC</button>
+    <div class="window-body">
+      <div class="overlay-content" style="max-width:none;line-height:1.4;">
+        <div class="seq-controls">
+          <div class="seq-ctrl-group">
+            <div class="seq-ctrl-label">KIT</div>
+            <select id="asc-kit-select" onchange="ascChangeKit(this.value)" style="background:var(--bg);color:var(--amber);border:1px solid var(--amber-dim);font-family:inherit;font-size:inherit;padding:8px 12px;cursor:none;-webkit-appearance:none;appearance:none;">
+              <option value="default">CHOIR</option>
+              <option value="303">TB-303</option>
+            </select>
+          </div>
+          <div class="seq-ctrl-group"><button id="asc-play-btn" onclick="ascTogglePlay()">PLAY</button></div>
+          <div class="seq-ctrl-group"><button onclick="ascClear()">CLEAR</button></div>
+        </div>
+        <div class="seq-container" id="asc-grid"></div>
+        <div class="seq-playhead" id="asc-playhead"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Phobos (shared controls) overlay -->
+<!-- Union (shared controls) overlay -->
 <div id="union-overlay" class="overlay-panel">
-  <div class="overlay-content" style="max-width:none;line-height:1.4;">
-    <div>UNION</div>
-    <br>
-    <div style="display:flex;flex-wrap:wrap;gap:24px;">
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">TEMPO</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-tempo" min="20" max="300" step="1" value="120">
-          <span class="union-slider-val" id="union-tempo-val">120</span>
+  <div class="window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">UNION</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="union-overlay">&#10005;</button>
+    </div>
+    <div class="window-body">
+      <div class="overlay-content" style="max-width:none;line-height:1.4;">
+        <div style="display:flex;flex-wrap:wrap;gap:24px;">
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">TEMPO</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-tempo" min="20" max="300" step="1" value="120">
+              <span class="union-slider-val" id="union-tempo-val">120</span>
+            </div>
+          </div>
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">ATTACK</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-attack" min="0" max="1" step="0.01" value="0.01">
+              <span class="union-slider-val" id="union-attack-val">0.01</span>
+            </div>
+          </div>
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">DECAY</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-decay" min="0" max="1" step="0.01" value="0.1">
+              <span class="union-slider-val" id="union-decay-val">0.10</span>
+            </div>
+          </div>
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">SUSTAIN</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-sustain" min="0" max="1" step="0.01" value="0.3">
+              <span class="union-slider-val" id="union-sustain-val">0.30</span>
+            </div>
+          </div>
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">RELEASE</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-release" min="0" max="1" step="0.01" value="0.1">
+              <span class="union-slider-val" id="union-release-val">0.10</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">ATTACK</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-attack" min="0" max="1" step="0.01" value="0.01">
-          <span class="union-slider-val" id="union-attack-val">0.01</span>
+        <br>
+        <div style="display:flex;flex-wrap:wrap;gap:24px;">
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">PENITENCE VOL</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-vol-pen" min="0" max="1" step="0.01" value="0.80">
+              <span class="union-slider-val" id="union-vol-pen-val">0.80</span>
+            </div>
+          </div>
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">ABSOLVE VOL</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-vol-seq" min="0" max="3" step="0.01" value="0.80">
+              <span class="union-slider-val" id="union-vol-seq-val">0.80</span>
+            </div>
+          </div>
+          <div class="union-slider-group">
+            <div class="seq-ctrl-label">ASCEND VOL</div>
+            <div class="union-slider-row">
+              <input type="range" class="union-range" id="union-vol-asc" min="0" max="1" step="0.01" value="0.80">
+              <span class="union-slider-val" id="union-vol-asc-val">0.80</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">DECAY</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-decay" min="0" max="1" step="0.01" value="0.1">
-          <span class="union-slider-val" id="union-decay-val">0.10</span>
+        <br>
+        <div style="display:flex;gap:24px;align-items:center;">
+          <button id="union-reticle-fx" onclick="toggleReticleFx()" style="background:var(--amber);color:var(--bg);border:1px solid var(--amber);font-family:inherit;font-size:inherit;padding:8px 16px;cursor:none;min-width:180px;">RETICLE FX: ON</button>
         </div>
-      </div>
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">SUSTAIN</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-sustain" min="0" max="1" step="0.01" value="0.3">
-          <span class="union-slider-val" id="union-sustain-val">0.30</span>
-        </div>
-      </div>
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">RELEASE</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-release" min="0" max="1" step="0.01" value="0.1">
-          <span class="union-slider-val" id="union-release-val">0.10</span>
-        </div>
+        <br>
+        <div style="opacity:0.6;">CONTROLS TEMPO, ENVELOPE, AND VOLUME FOR ALL INSTRUMENTS</div>
       </div>
     </div>
-    <br>
-    <div style="display:flex;flex-wrap:wrap;gap:24px;">
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">PENITENCE VOL</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-vol-pen" min="0" max="1" step="0.01" value="0.80">
-          <span class="union-slider-val" id="union-vol-pen-val">0.80</span>
-        </div>
-      </div>
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">ABSOLVE VOL</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-vol-seq" min="0" max="3" step="0.01" value="0.80">
-          <span class="union-slider-val" id="union-vol-seq-val">0.80</span>
-        </div>
-      </div>
-      <div class="union-slider-group">
-        <div class="seq-ctrl-label">ASCEND VOL</div>
-        <div class="union-slider-row">
-          <input type="range" class="union-range" id="union-vol-asc" min="0" max="1" step="0.01" value="0.80">
-          <span class="union-slider-val" id="union-vol-asc-val">0.80</span>
-        </div>
-      </div>
-    </div>
-    <br>
-    <div style="display:flex;gap:24px;align-items:center;">
-      <button id="union-reticle-fx" onclick="toggleReticleFx()" style="background:var(--amber);color:var(--bg);border:1px solid var(--amber);font-family:inherit;font-size:inherit;padding:8px 16px;cursor:none;min-width:180px;">RETICLE FX: ON</button>
-    </div>
-    <br>
-    <div style="opacity:0.6;">CONTROLS TEMPO, ENVELOPE, AND VOLUME FOR ALL INSTRUMENTS</div>
-    <br>
-    <button class="esc-btn" data-overlay="union-overlay">ESC</button>
   </div>
 </div>
 
@@ -1112,9 +1207,9 @@ function hideOverlay() {
   playCloseSound();
 }
 
-// ESC buttons — use event delegation so dynamically added buttons work
+// Close buttons — use event delegation so dynamically added buttons work
 document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('esc-btn')) {
+  if (e.target.classList.contains('esc-btn') || e.target.classList.contains('window-close-btn')) {
     e.stopPropagation();
     hideOverlay();
   }
@@ -2556,16 +2651,6 @@ const SEQ_KITS = {
     { name: 'TOM L', type: '909-tom',    freq: 140,  decay: 0.2 },
     { name: 'KICK',  type: '909-kick',   freq: 50,   decay: 0.35 },
   ],
-  '303': [
-    { name: 'SAW H', type: '303-saw',  freq: 880,  decay: 0.1 },
-    { name: 'SAW M', type: '303-saw',  freq: 440,  decay: 0.12 },
-    { name: 'SAW L', type: '303-saw',  freq: 220,  decay: 0.15 },
-    { name: 'SQR H', type: '303-sqr',  freq: 660,  decay: 0.1 },
-    { name: 'SQR M', type: '303-sqr',  freq: 330,  decay: 0.12 },
-    { name: 'SQR L', type: '303-sqr',  freq: 165,  decay: 0.15 },
-    { name: 'ACID',  type: '303-acid', freq: 110,  decay: 0.2 },
-    { name: 'BASS',  type: '303-bass', freq: 55,   decay: 0.25 },
-  ],
 };
 
 let seqCurrentKit = 'default';
@@ -3240,16 +3325,41 @@ const VOWELS = {
   huh:  { f: [600, 1000, 2500],  bw: [180, 200, 220] },
   ooh:  { f: [320, 800, 2300],   bw: [140, 170, 200] },
 };
-const ASC_ROWS = [
-  { name: 'SERAPH',  freq: 880,  vowel: 'hwee', type: 'choir' },
-  { name: 'LIGHT',   freq: 659,  vowel: 'hah',  type: 'choir' },
-  { name: 'AETHER',  freq: 523,  vowel: 'shh',  type: 'choir' },
-  { name: 'HYMN',    freq: 392,  vowel: 'so',   type: 'choir' },
-  { name: 'VESPER',  freq: 330,  vowel: 'woe',  type: 'choir' },
-  { name: 'CHANT',   freq: 261,  vowel: 'huh',  type: 'choir' },
-  { name: 'DRONE',   freq: 165,  vowel: 'hoo',  type: 'drone' },
-  { name: 'ABYSS',   freq: 82,   vowel: 'ooh',  type: 'drone' },
-];
+const ASC_KITS = {
+  default: [
+    { name: 'SERAPH',  freq: 880,  vowel: 'hwee', type: 'choir' },
+    { name: 'LIGHT',   freq: 659,  vowel: 'hah',  type: 'choir' },
+    { name: 'AETHER',  freq: 523,  vowel: 'shh',  type: 'choir' },
+    { name: 'HYMN',    freq: 392,  vowel: 'so',   type: 'choir' },
+    { name: 'VESPER',  freq: 330,  vowel: 'woe',  type: 'choir' },
+    { name: 'CHANT',   freq: 261,  vowel: 'huh',  type: 'choir' },
+    { name: 'DRONE',   freq: 165,  vowel: 'hoo',  type: 'drone' },
+    { name: 'ABYSS',   freq: 82,   vowel: 'ooh',  type: 'drone' },
+  ],
+  '303': [
+    { name: 'SAW H', type: '303-saw',  freq: 880,  decay: 0.1 },
+    { name: 'SAW M', type: '303-saw',  freq: 440,  decay: 0.12 },
+    { name: 'SAW L', type: '303-saw',  freq: 220,  decay: 0.15 },
+    { name: 'SQR H', type: '303-sqr',  freq: 660,  decay: 0.1 },
+    { name: 'SQR M', type: '303-sqr',  freq: 330,  decay: 0.12 },
+    { name: 'SQR L', type: '303-sqr',  freq: 165,  decay: 0.15 },
+    { name: 'ACID',  type: '303-acid', freq: 110,  decay: 0.2 },
+    { name: 'BASS',  type: '303-bass', freq: 55,   decay: 0.25 },
+  ],
+};
+
+let ascCurrentKit = 'default';
+let ASC_ROWS = ASC_KITS.default;
+
+function ascChangeKit(kit) {
+  ascCurrentKit = kit;
+  ASC_ROWS = ASC_KITS[kit];
+  const gridEl = document.getElementById('asc-grid');
+  const labels = gridEl.querySelectorAll('.seq-label');
+  labels.forEach((label, i) => {
+    if (ASC_ROWS[i]) label.textContent = ASC_ROWS[i].name;
+  });
+}
 
 let ascGrid = [];
 let ascPlaying = false;
@@ -3387,6 +3497,16 @@ function ascGetADSR() {
 
 function ascPlaySound(row) {
   if (!audioCtx || !soundEnabled) return;
+
+  // Delegate 303 types to the shared synth engine (using ascend volume)
+  if (row.type && row.type.startsWith('303')) {
+    const origSeqVol = seqVolGain;
+    seqVolGain = ascVolGain;
+    seqPlaySound(row);
+    seqVolGain = origSeqVol;
+    return;
+  }
+
   const now = audioCtx.currentTime;
   const adsr = ascGetADSR();
   const totalDur = adsr.a + adsr.d + adsr.r + 0.4;
