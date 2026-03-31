@@ -727,112 +727,9 @@ input[type="range"].union-range::-moz-range-thumb {
   text-align: right;
   text-shadow: 0 0 6px rgba(212, 137, 10, 0.2);
 }
-
-/* ═══════════════════════════════════════════
-   MOBILE / SMALL SCREEN RESPONSIVE
-   Simple max-width targeting, no pointer queries
-   ═══════════════════════════════════════════ */
-
-/* Small screens: hide reticle, scale everything down */
-@media screen and (max-width: 932px) {
-  .crosshair-seg, #reticle { display: none !important; }
-  html, body { cursor: auto !important; }
-
-  #interface { padding: 10px 14px; }
-
-  .title, .subtitle, .prompt-label, #command-input,
-  .output-line, .overlay-content,
-  .seq-controls button, .seq-controls input[type="text"] {
-    font-size: 0.75rem !important;
-  }
-
-  .seq-ctrl-label, .seq-label, .union-slider-group .seq-ctrl-label,
-  .union-slider-val {
-    font-size: 0.65rem !important;
-  }
-
-  .seq-cell { width: 28px !important; height: 28px !important; }
-  .seq-ph-cell { width: 28px !important; height: 6px !important; }
-  .seq-row, .seq-playhead { gap: 3px !important; }
-  .seq-label { width: 40px !important; padding-right: 4px !important; }
-  .seq-controls { margin-left: 44px !important; gap: 3px !important; }
-  .seq-controls .seq-ctrl-group { width: 59px !important; }
-  .seq-controls .seq-ctrl-spacer { width: 59px !important; }
-
-  .window-body { padding: 16px !important; }
-  .window-titlebar { height: 28px; }
-  .window-title { font-size: 0.8rem !important; padding: 0 8px; }
-  .window-close-btn { width: 28px; height: 28px; font-size: 0.7rem; }
-  .window-frame { max-width: 98vw !important; max-height: 96vh !important; }
-
-  .union-slider-group { min-width: 80px !important; }
-  input[type="range"].union-range { width: 80px !important; }
-
-  .overlay-content { font-size: 0.75rem !important; line-height: 1.6 !important; }
-  #status { font-size: 0.75rem !important; top: 10px; right: 14px; }
-
-  .corner { width: 12px; height: 12px; }
-  .corner-tl { top: 6px; left: 6px; }
-  .corner-tr { top: 6px; right: 6px; }
-  .corner-bl { bottom: 6px; left: 6px; }
-  .corner-br { bottom: 6px; right: 6px; }
-
-  #command-input {
-    font-size: 16px !important;
-    -webkit-user-select: text;
-    user-select: text;
-  }
-
-  .pen-key { width: 32px !important; height: 32px !important; font-size: 0.65rem !important; }
-
-  .photo-grid-item canvas { max-width: 120px !important; max-height: 90px !important; }
-  .photo-grid-item { gap: 4px !important; }
-  .photo-grid { gap: 12px !important; }
-}
-
-/* Portrait on small screens: show rotate message */
-@media screen and (max-width: 500px) and (orientation: portrait) {
-  body::before, body::after { display: none !important; }
-  #bg-layer, .overlay-panel, #screensaver,
-  #refraction-overlay, #phosphor-scan { display: none !important; }
-  body {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  #rotate-msg {
-    display: flex !important;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    font-size: 1.2rem;
-    text-align: center;
-    padding: 32px;
-    letter-spacing: 0.1em;
-    text-shadow: 0 0 4px rgba(212, 137, 10, 0.8);
-  }
-  #rotate-msg .rotate-icon {
-    font-size: 3rem;
-    animation: rotatePulse 2s ease-in-out infinite;
-  }
-}
-@keyframes rotatePulse {
-  0%, 100% { transform: rotate(0deg); opacity: 0.6; }
-  50% { transform: rotate(90deg); opacity: 1; }
-}
-
-/* Rotate message - hidden by default */
-#rotate-msg { display: none; }
 </style>
 </head>
 <body>
-
-<!-- Portrait rotate message -->
-<div id="rotate-msg">
-  <div class="rotate-icon">⟳</div>
-  <div>ROTATE DEVICE TO<br>LANDSCAPE MODE</div>
-  <div style="opacity:0.5;font-size:0.8rem;margin-top:8px;">mOS v1.0</div>
-</div>
 
 <!-- SVG Chromatic Aberration Filter -->
 <svg style="position:absolute;width:0;height:0;" aria-hidden="true">
@@ -947,7 +844,7 @@ input[type="range"].union-range::-moz-range-thumb {
 
     <div id="command-area">
       <span class="prompt-label">COMMAND&gt;&nbsp;</span>
-      <input type="text" id="command-input" autocomplete="off" spellcheck="false" autofocus enterkeyhint="go" autocapitalize="none" autocorrect="off">
+      <input type="text" id="command-input" autocomplete="off" spellcheck="false" autofocus>
     </div>
   </div>
 </div><!-- end #bg-layer -->
@@ -1203,13 +1100,6 @@ input[type="range"].union-range::-moz-range-thumb {
 </div>
 
 <script>
-/* ═══════════════════════════════════════════
-   TOUCH DEVICE DETECTION
-   ═══════════════════════════════════════════ */
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-  document.body.classList.add('is-touch');
-}
-
 /* ═══════════════════════════════════════════
    CROSSHAIR TRACKING
    ═══════════════════════════════════════════ */
@@ -2203,21 +2093,7 @@ function onActivity() {
 
 document.addEventListener('mousemove', onActivity);
 document.addEventListener('keydown', onActivity);
-document.addEventListener('touchstart', onActivity);
 window.addEventListener('resize', () => { if (ssActive) resizeCanvas(); });
-
-// Mobile: tap anywhere on main screen to focus command input
-document.addEventListener('touchstart', (e) => {
-  const inp = document.getElementById('command-input');
-  if (!inp) return;
-  // Only focus if no overlay is active and not tapping an interactive element
-  const tag = e.target.tagName;
-  if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT') return;
-  const activeOverlay = document.querySelector('.overlay-panel.active');
-  if (!activeOverlay) {
-    inp.focus();
-  }
-});
 
 // Start idle timer
 resetIdleTimer();
@@ -2238,8 +2114,6 @@ function startAmbientAudio() {
   audioStarted = true;
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // iOS: force resume immediately after creation inside user gesture
-  if (audioCtx.state === 'suspended') audioCtx.resume();
 
   // Master gain — keep it subtle
   const master = audioCtx.createGain();
@@ -2462,29 +2336,14 @@ function startAmbientAudio() {
   setTimeout(scheduleClick, 500);
 }
 
-// Browsers require user gesture to start audio (iOS needs touchstart + silent buffer trick)
+// Browsers require user gesture to start audio
 function initAudioOnce() {
   startAmbientAudio();
-  // iOS: play a silent buffer to fully unlock audio output
-  if (audioCtx) {
-    const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-    const silentSrc = audioCtx.createBufferSource();
-    silentSrc.buffer = silentBuf;
-    silentSrc.connect(audioCtx.destination);
-    silentSrc.start(0);
-    // Also resume in case it's still suspended
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  }
   document.removeEventListener('click', initAudioOnce);
   document.removeEventListener('keydown', initAudioOnce);
-  document.removeEventListener('touchstart', initAudioOnce);
-  document.removeEventListener('touchend', initAudioOnce);
 }
 document.addEventListener('click', initAudioOnce);
 document.addEventListener('keydown', initAudioOnce);
-// iOS Safari is most reliable with touchend for audio unlock
-document.addEventListener('touchstart', initAudioOnce);
-document.addEventListener('touchend', initAudioOnce);
 
 /* ═══════════════════════════════════════════
    ARPEGGIATOR (PENITENCE)
@@ -2558,10 +2417,6 @@ function penInit() {
         ev.preventDefault();
         penToggleKey(k);
       });
-      key.addEventListener('touchstart', (ev) => {
-        ev.preventDefault();
-        penToggleKey(k);
-      }, { passive: false });
       row.appendChild(key);
     });
     kb.appendChild(row);
@@ -2938,32 +2793,6 @@ function seqInit() {
   });
 
   document.addEventListener('mouseup', () => { seqDragging = false; });
-
-  // Touch support for mobile
-  gridEl.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!cell || !cell.classList.contains('seq-cell')) return;
-    e.preventDefault();
-    seqDragging = true;
-    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
-    seqPaintOn = !seqGrid[r][s];
-    seqGrid[r][s] = seqPaintOn;
-    cell.classList.toggle('on', seqPaintOn);
-  }, { passive: false });
-
-  gridEl.addEventListener('touchmove', (e) => {
-    if (!seqDragging) return;
-    const touch = e.touches[0];
-    const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!cell || !cell.classList.contains('seq-cell')) return;
-    e.preventDefault();
-    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
-    seqGrid[r][s] = seqPaintOn;
-    cell.classList.toggle('on', seqPaintOn);
-  }, { passive: false });
-
-  document.addEventListener('touchend', () => { seqDragging = false; });
 
   for (let r = 0; r < SEQ_ROWS.length; r++) {
     seqGrid[r] = new Array(SEQ_STEPS).fill(false);
@@ -3570,32 +3399,6 @@ function ascInit() {
   });
 
   document.addEventListener('mouseup', () => { ascDragging = false; });
-
-  // Touch support for mobile
-  gridEl.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!cell || !cell.classList.contains('seq-cell')) return;
-    e.preventDefault();
-    ascDragging = true;
-    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
-    ascPaintOn = !ascGrid[r][s];
-    ascGrid[r][s] = ascPaintOn;
-    cell.classList.toggle('on', ascPaintOn);
-  }, { passive: false });
-
-  gridEl.addEventListener('touchmove', (e) => {
-    if (!ascDragging) return;
-    const touch = e.touches[0];
-    const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!cell || !cell.classList.contains('seq-cell')) return;
-    e.preventDefault();
-    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
-    ascGrid[r][s] = ascPaintOn;
-    cell.classList.toggle('on', ascPaintOn);
-  }, { passive: false });
-
-  document.addEventListener('touchend', () => { ascDragging = false; });
 
   for (let r = 0; r < ASC_ROWS.length; r++) {
     ascGrid[r] = new Array(ASC_STEPS).fill(false);
