@@ -730,26 +730,75 @@ input[type="range"].union-range::-moz-range-thumb {
 
 /* ═══════════════════════════════════════════
    MOBILE / SMALL SCREEN RESPONSIVE
-   Uses pointer:coarse and hover:none to detect
-   touch devices purely in CSS (no JS class needed)
+   Simple max-width targeting, no pointer queries
    ═══════════════════════════════════════════ */
 
-/* Hide crosshair and reticle on all touch/coarse-pointer devices */
-@media (pointer: coarse) {
+/* Small screens: hide reticle, scale everything down */
+@media screen and (max-width: 932px) {
   .crosshair-seg, #reticle { display: none !important; }
   html, body { cursor: auto !important; }
+
+  #interface { padding: 10px 14px; }
+
+  .title, .subtitle, .prompt-label, #command-input,
+  .output-line, .overlay-content,
+  .seq-controls button, .seq-controls input[type="text"] {
+    font-size: 0.75rem !important;
+  }
+
+  .seq-ctrl-label, .seq-label, .union-slider-group .seq-ctrl-label,
+  .union-slider-val {
+    font-size: 0.65rem !important;
+  }
+
+  .seq-cell { width: 28px !important; height: 28px !important; }
+  .seq-ph-cell { width: 28px !important; height: 6px !important; }
+  .seq-row, .seq-playhead { gap: 3px !important; }
+  .seq-label { width: 40px !important; padding-right: 4px !important; }
+  .seq-controls { margin-left: 44px !important; gap: 3px !important; }
+  .seq-controls .seq-ctrl-group { width: 59px !important; }
+  .seq-controls .seq-ctrl-spacer { width: 59px !important; }
+
+  .window-body { padding: 16px !important; }
+  .window-titlebar { height: 28px; }
+  .window-title { font-size: 0.8rem !important; padding: 0 8px; }
+  .window-close-btn { width: 28px; height: 28px; font-size: 0.7rem; }
+  .window-frame { max-width: 98vw !important; max-height: 96vh !important; }
+
+  .union-slider-group { min-width: 80px !important; }
+  input[type="range"].union-range { width: 80px !important; }
+
+  .overlay-content { font-size: 0.75rem !important; line-height: 1.6 !important; }
+  #status { font-size: 0.75rem !important; top: 10px; right: 14px; }
+
+  .corner { width: 12px; height: 12px; }
+  .corner-tl { top: 6px; left: 6px; }
+  .corner-tr { top: 6px; right: 6px; }
+  .corner-bl { bottom: 6px; left: 6px; }
+  .corner-br { bottom: 6px; right: 6px; }
+
+  #command-input {
+    font-size: 16px !important;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .pen-key { width: 32px !important; height: 32px !important; font-size: 0.65rem !important; }
+
+  .photo-grid-item canvas { max-width: 120px !important; max-height: 90px !important; }
+  .photo-grid-item { gap: 4px !important; }
+  .photo-grid { gap: 12px !important; }
 }
 
-/* Portrait warning on touch devices */
-@media (pointer: coarse) and (max-width: 768px) and (orientation: portrait) {
-  body::before { display: none; }
-  body::after { display: none; }
+/* Portrait on small screens: show rotate message */
+@media screen and (max-width: 500px) and (orientation: portrait) {
+  body::before, body::after { display: none !important; }
   #bg-layer, .overlay-panel, #screensaver,
   #refraction-overlay, #phosphor-scan { display: none !important; }
   body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   #rotate-msg {
     display: flex !important;
@@ -766,89 +815,10 @@ input[type="range"].union-range::-moz-range-thumb {
     font-size: 3rem;
     animation: rotatePulse 2s ease-in-out infinite;
   }
-  @keyframes rotatePulse {
-    0%, 100% { transform: rotate(0deg); opacity: 0.6; }
-    50% { transform: rotate(90deg); opacity: 1; }
-  }
 }
-
-/* Landscape mobile + small tablets on touch devices */
-@media (pointer: coarse) and (max-width: 932px) and (orientation: landscape) {
-  /* Reduce interface padding */
-  #interface { padding: 10px 14px; }
-
-  /* Scale down typography */
-  .title, .subtitle, .prompt-label, #command-input,
-  .output-line, .overlay-content,
-  .seq-controls button, .seq-controls input[type="text"] {
-    font-size: 0.75rem !important;
-  }
-
-  .seq-ctrl-label, .seq-label, .union-slider-group .seq-ctrl-label,
-  .union-slider-val {
-    font-size: 0.65rem !important;
-  }
-
-  /* Scale down sequencer cells */
-  .seq-cell {
-    width: 28px !important;
-    height: 28px !important;
-  }
-  .seq-ph-cell {
-    width: 28px !important;
-    height: 6px !important;
-  }
-  .seq-row, .seq-playhead { gap: 3px !important; }
-  .seq-label { width: 40px !important; padding-right: 4px !important; }
-  .seq-controls { margin-left: 44px !important; gap: 3px !important; }
-  .seq-controls .seq-ctrl-group { width: 59px !important; }
-  .seq-controls .seq-ctrl-spacer { width: 59px !important; }
-
-  /* Scale down window frames */
-  .window-body { padding: 16px !important; }
-  .window-titlebar { height: 28px; }
-  .window-title { font-size: 0.8rem !important; padding: 0 8px; }
-  .window-close-btn { width: 28px; height: 28px; font-size: 0.7rem; }
-  .window-frame { max-width: 98vw !important; max-height: 96vh !important; }
-
-  /* Union sliders */
-  .union-slider-group { min-width: 80px !important; }
-  input[type="range"].union-range { width: 80px !important; }
-
-  /* Overlay content */
-  .overlay-content { font-size: 0.75rem !important; line-height: 1.6 !important; }
-
-  /* Status */
-  #status { font-size: 0.75rem !important; top: 10px; right: 14px; }
-
-  /* Corners */
-  .corner { width: 12px; height: 12px; }
-  .corner-tl { top: 6px; left: 6px; }
-  .corner-tr { top: 6px; right: 6px; }
-  .corner-bl { bottom: 6px; left: 6px; }
-  .corner-br { bottom: 6px; right: 6px; }
-
-  /* Command input - ensure touch keyboard works */
-  #command-input {
-    font-size: 16px !important; /* Prevents iOS zoom on focus */
-    -webkit-user-select: text;
-    user-select: text;
-  }
-
-  /* Penitence keys */
-  .pen-key {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 0.65rem !important;
-  }
-
-  /* Photo grid */
-  .photo-grid-item canvas {
-    max-width: 120px !important;
-    max-height: 90px !important;
-  }
-  .photo-grid-item { gap: 4px !important; }
-  .photo-grid { gap: 12px !important; }
+@keyframes rotatePulse {
+  0%, 100% { transform: rotate(0deg); opacity: 0.6; }
+  50% { transform: rotate(90deg); opacity: 1; }
 }
 
 /* Rotate message - hidden by default */
