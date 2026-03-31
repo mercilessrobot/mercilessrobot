@@ -730,21 +730,28 @@ input[type="range"].union-range::-moz-range-thumb {
 
 /* ═══════════════════════════════════════════
    MOBILE / SMALL SCREEN RESPONSIVE
+   Uses pointer:coarse and hover:none to detect
+   touch devices purely in CSS (no JS class needed)
    ═══════════════════════════════════════════ */
 
-/* Portrait warning - only on actual touch devices via JS class */
-@media (max-width: 768px) and (orientation: portrait) {
-  body.is-touch::before { display: none; }
-  body.is-touch #bg-layer, body.is-touch .overlay-panel, body.is-touch #screensaver,
-  body.is-touch #refraction-overlay, body.is-touch .crosshair-seg, body.is-touch #reticle { display: none !important; }
-  body.is-touch::after { display: none; }
-  body.is-touch #phosphor-scan { display: none; }
-  body.is-touch {
+/* Hide crosshair and reticle on all touch/coarse-pointer devices */
+@media (pointer: coarse) {
+  .crosshair-seg, #reticle { display: none !important; }
+  html, body { cursor: auto !important; }
+}
+
+/* Portrait warning on touch devices */
+@media (pointer: coarse) and (max-width: 768px) and (orientation: portrait) {
+  body::before { display: none; }
+  body::after { display: none; }
+  #bg-layer, .overlay-panel, #screensaver,
+  #refraction-overlay, #phosphor-scan { display: none !important; }
+  body {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  body.is-touch #rotate-msg {
+  #rotate-msg {
     display: flex !important;
     flex-direction: column;
     align-items: center;
@@ -755,7 +762,7 @@ input[type="range"].union-range::-moz-range-thumb {
     letter-spacing: 0.1em;
     text-shadow: 0 0 4px rgba(212, 137, 10, 0.8);
   }
-  body.is-touch #rotate-msg .rotate-icon {
+  #rotate-msg .rotate-icon {
     font-size: 3rem;
     animation: rotatePulse 2s ease-in-out infinite;
   }
@@ -765,13 +772,8 @@ input[type="range"].union-range::-moz-range-thumb {
   }
 }
 
-/* Landscape mobile + small tablets - only on touch devices */
-@media (max-width: 932px) and (orientation: landscape),
-       (max-width: 768px) {
-  /* Hide crosshair and reticle on touch devices */
-  body.is-touch .crosshair-seg, body.is-touch #reticle { display: none !important; }
-  body.is-touch, body.is-touch html { cursor: auto; overflow: hidden; }
-
+/* Landscape mobile + small tablets on touch devices */
+@media (pointer: coarse) and (max-width: 932px) and (orientation: landscape) {
   /* Reduce interface padding */
   #interface { padding: 10px 14px; }
 
