@@ -2266,6 +2266,8 @@ function startAmbientAudio() {
   audioStarted = true;
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // iOS: force resume immediately after creation inside user gesture
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 
   // Master gain — keep it subtle
   const master = audioCtx.createGain();
@@ -2488,20 +2490,29 @@ function startAmbientAudio() {
   setTimeout(scheduleClick, 500);
 }
 
-// Browsers require user gesture to start audio (iOS needs touchstart + resume)
+// Browsers require user gesture to start audio (iOS needs touchstart + silent buffer trick)
 function initAudioOnce() {
   startAmbientAudio();
-  // iOS suspends AudioContext — must resume inside gesture
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
+  // iOS: play a silent buffer to fully unlock audio output
+  if (audioCtx) {
+    const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+    const silentSrc = audioCtx.createBufferSource();
+    silentSrc.buffer = silentBuf;
+    silentSrc.connect(audioCtx.destination);
+    silentSrc.start(0);
+    // Also resume in case it's still suspended
+    if (audioCtx.state === 'suspended') audioCtx.resume();
   }
   document.removeEventListener('click', initAudioOnce);
   document.removeEventListener('keydown', initAudioOnce);
   document.removeEventListener('touchstart', initAudioOnce);
+  document.removeEventListener('touchend', initAudioOnce);
 }
 document.addEventListener('click', initAudioOnce);
 document.addEventListener('keydown', initAudioOnce);
+// iOS Safari is most reliable with touchend for audio unlock
 document.addEventListener('touchstart', initAudioOnce);
+document.addEventListener('touchend', initAudioOnce);
 
 /* ═══════════════════════════════════════════
    ARPEGGIATOR (PENITENCE)
