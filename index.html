@@ -732,19 +732,19 @@ input[type="range"].union-range::-moz-range-thumb {
    MOBILE / SMALL SCREEN RESPONSIVE
    ═══════════════════════════════════════════ */
 
-/* Portrait warning - suggest landscape */
+/* Portrait warning - only on actual touch devices via JS class */
 @media (max-width: 768px) and (orientation: portrait) {
-  body::before { display: none; }
-  #bg-layer, .overlay-panel, #screensaver,
-  #refraction-overlay, .crosshair-seg, #reticle { display: none !important; }
-  body::after { display: none; }
-  #phosphor-scan { display: none; }
-  body {
+  body.is-touch::before { display: none; }
+  body.is-touch #bg-layer, body.is-touch .overlay-panel, body.is-touch #screensaver,
+  body.is-touch #refraction-overlay, body.is-touch .crosshair-seg, body.is-touch #reticle { display: none !important; }
+  body.is-touch::after { display: none; }
+  body.is-touch #phosphor-scan { display: none; }
+  body.is-touch {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  #rotate-msg {
+  body.is-touch #rotate-msg {
     display: flex !important;
     flex-direction: column;
     align-items: center;
@@ -755,7 +755,7 @@ input[type="range"].union-range::-moz-range-thumb {
     letter-spacing: 0.1em;
     text-shadow: 0 0 4px rgba(212, 137, 10, 0.8);
   }
-  #rotate-msg .rotate-icon {
+  body.is-touch #rotate-msg .rotate-icon {
     font-size: 3rem;
     animation: rotatePulse 2s ease-in-out infinite;
   }
@@ -765,12 +765,12 @@ input[type="range"].union-range::-moz-range-thumb {
   }
 }
 
-/* Landscape mobile + small tablets */
+/* Landscape mobile + small tablets - only on touch devices */
 @media (max-width: 932px) and (orientation: landscape),
        (max-width: 768px) {
-  /* Hide crosshair and reticle on touch */
-  .crosshair-seg, #reticle { display: none !important; }
-  html, body { cursor: auto; overflow: hidden; }
+  /* Hide crosshair and reticle on touch devices */
+  body.is-touch .crosshair-seg, body.is-touch #reticle { display: none !important; }
+  body.is-touch, body.is-touch html { cursor: auto; overflow: hidden; }
 
   /* Reduce interface padding */
   #interface { padding: 10px 14px; }
@@ -1231,6 +1231,13 @@ input[type="range"].union-range::-moz-range-thumb {
 </div>
 
 <script>
+/* ═══════════════════════════════════════════
+   TOUCH DEVICE DETECTION
+   ═══════════════════════════════════════════ */
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.body.classList.add('is-touch');
+}
+
 /* ═══════════════════════════════════════════
    CROSSHAIR TRACKING
    ═══════════════════════════════════════════ */
@@ -2481,14 +2488,20 @@ function startAmbientAudio() {
   setTimeout(scheduleClick, 500);
 }
 
-// Browsers require user gesture to start audio
+// Browsers require user gesture to start audio (iOS needs touchstart + resume)
 function initAudioOnce() {
   startAmbientAudio();
+  // iOS suspends AudioContext — must resume inside gesture
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   document.removeEventListener('click', initAudioOnce);
   document.removeEventListener('keydown', initAudioOnce);
+  document.removeEventListener('touchstart', initAudioOnce);
 }
 document.addEventListener('click', initAudioOnce);
 document.addEventListener('keydown', initAudioOnce);
+document.addEventListener('touchstart', initAudioOnce);
 
 /* ═══════════════════════════════════════════
    ARPEGGIATOR (PENITENCE)
