@@ -677,6 +677,70 @@ input[type="range"].union-range::-moz-range-thumb {
   content: '· ';
 }
 
+/* Edicts list */
+.edict-item {
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  cursor: none;
+  transition: background 0.1s, color 0.1s;
+}
+
+.edict-item.selected {
+  background: var(--amber);
+  color: var(--bg-dark);
+  text-shadow: none;
+}
+
+.edict-item:hover {
+  background: rgba(212, 137, 10, 0.2);
+}
+
+.edict-item.selected:hover {
+  background: var(--amber);
+}
+
+/* Edict detail overlay — sits above edict list */
+#edict-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+#edict-detail-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#edicts-overlay .window-frame {
+  transition: filter 0.5s ease, transform 0.5s ease, opacity 0.5s ease;
+}
+
+#edicts-overlay .window-frame.zoomed-out {
+  filter: blur(4px);
+  transform: scale(0.92);
+  opacity: 0.4;
+}
+
+.edict-body {
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  line-height: 2;
+  text-shadow:
+    0 0 4px rgba(212, 137, 10, 0.8),
+    10px 0 12px rgba(212, 137, 10, 0.15),
+    -10px 0 12px rgba(212, 137, 10, 0.15),
+    3px 0 0 rgba(255, 60, 20, 0.12),
+    -3px 0 0 rgba(20, 255, 60, 0.08);
+  max-width: 700px;
+}
+
 /* Background layer — wraps interface, corners, status for unified blur */
 #bg-layer {
   position: fixed;
@@ -868,6 +932,7 @@ input[type="range"].union-range::-moz-range-thumb {
         <div class="help-list-item">ABSOLVE</div>
         <div class="help-list-item">ASCEND</div>
         <div class="help-list-item">UNION</div>
+        <div class="help-list-item">EDICTS</div>
         <br>
         <div>TYPE A PROGRAM NAME TO LAUNCH IT OR COMMANDS TO SEE A LIST OF AVAILABLE COMMANDS</div>
       </div>
@@ -893,6 +958,7 @@ input[type="range"].union-range::-moz-range-thumb {
         <div class="help-list-item">ABSOLVE</div>
         <div class="help-list-item">ASCEND</div>
         <div class="help-list-item">UNION</div>
+        <div class="help-list-item">EDICTS</div>
         <div class="help-list-item">PHOTO</div>
         <div class="help-list-item">PLAY</div>
         <div class="help-list-item">STOP</div>
@@ -901,6 +967,36 @@ input[type="range"].union-range::-moz-range-thumb {
         <div class="help-list-item">SOUND ON</div>
         <div class="help-list-item">SOUND OFF</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edicts list overlay -->
+<div id="edicts-overlay" class="overlay-panel">
+  <div class="window-frame" id="edicts-window-frame">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title">EDICTS</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" data-overlay="edicts-overlay">&#10005;</button>
+    </div>
+    <div class="window-body">
+      <div id="edicts-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edict detail overlay (sits above edicts list) -->
+<div id="edict-detail-overlay">
+  <div class="window-frame" style="max-width:90vw;max-height:90vh;">
+    <div class="window-titlebar">
+      <div class="window-titlebar-lines"></div>
+      <div class="window-title" id="edict-detail-title">EDICT</div>
+      <div class="window-titlebar-lines"></div>
+      <button class="window-close-btn" id="edict-detail-close">&#10005;</button>
+    </div>
+    <div class="window-body" style="overflow-y:auto;">
+      <div class="edict-body" id="edict-detail-body"></div>
     </div>
   </div>
 </div>
@@ -1198,10 +1294,15 @@ function showOverlay(id) {
 
 function hideOverlay() {
   if (!activeOverlay) return;
+  // Close edict detail if open
+  if (edictDetailOpen) {
+    closeEdictDetail();
+  }
   // Let sequencers keep playing when closing their overlays
   activeOverlay.classList.remove('active');
   activeOverlay = null;
   bgLayer.classList.remove('zoomed-out');
+  bgLayer.classList.remove('zoomed-out-deep');
   input.disabled = false;
   input.focus();
   playCloseSound();
@@ -1216,6 +1317,20 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
+  // Edicts navigation
+  if (activeOverlay && activeOverlay.id === 'edicts-overlay' && edictDetailOpen) {
+    if (e.key === 'Escape') { e.preventDefault(); closeEdictDetail(); }
+    return;
+  }
+  if (activeOverlay && activeOverlay.id === 'edicts-overlay' && !edictDetailOpen) {
+    const total = EDICTS.length;
+    if (e.key === 'ArrowDown') { e.preventDefault(); edictSelectedIdx = Math.min(edictSelectedIdx + 1, total - 1); updateEdictSelection(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); edictSelectedIdx = Math.max(edictSelectedIdx - 1, 0); updateEdictSelection(); }
+    else if (e.key === 'Enter') { e.preventDefault(); openEdictDetail(); }
+    else if (e.key === 'Escape') { hideOverlay(); }
+    return;
+  }
+
   // Photo grid navigation
   if (activeOverlay && activeOverlay.id === 'photo-overlay' && !photoExpanded) {
     const cols = 3;
@@ -1290,6 +1405,12 @@ const commands = {
 
   union: () => {
     showOverlay('union-overlay');
+    return [];
+  },
+
+  edicts: () => {
+    showOverlay('edicts-overlay');
+    edictsInit();
     return [];
   },
 
@@ -1618,6 +1739,83 @@ function collapsePhoto() {
   bgLayer.classList.add('zoomed-out');
   playCloseSound();
 }
+
+// ——— EDICTS ———
+const EDICTS = [
+  {
+    title: 'WELCOME TO EDICTS',
+    body: 'THIS IS THE FIRST EDICT.\n\nEDICTS ARE PROCLAMATIONS FROM THE MERCILESS OPERATING SYSTEM. THEY CONTAIN IMPORTANT INFORMATION, OBSERVATIONS, AND DIRECTIVES.\n\nUSE THE ARROW KEYS TO NAVIGATE THE LIST. PRESS ENTER OR CLICK TO OPEN AN EDICT. PRESS ESCAPE OR CLICK X TO GO BACK.'
+  }
+];
+
+let edictSelectedIdx = 0;
+let edictDetailOpen = false;
+
+function edictsInit() {
+  const listEl = document.getElementById('edicts-list');
+  listEl.innerHTML = '';
+  EDICTS.forEach((edict, i) => {
+    const item = document.createElement('div');
+    item.className = 'edict-item' + (i === edictSelectedIdx ? ' selected' : '');
+    item.textContent = edict.title;
+    item.addEventListener('click', () => {
+      edictSelectedIdx = i;
+      updateEdictSelection();
+      openEdictDetail();
+    });
+    listEl.appendChild(item);
+  });
+}
+
+function updateEdictSelection() {
+  const items = document.querySelectorAll('.edict-item');
+  items.forEach((item, i) => {
+    item.classList.toggle('selected', i === edictSelectedIdx);
+  });
+  // Scroll selected into view
+  const selected = items[edictSelectedIdx];
+  if (selected) selected.scrollIntoView({ block: 'nearest' });
+}
+
+function openEdictDetail() {
+  if (edictDetailOpen) return;
+  edictDetailOpen = true;
+  const edict = EDICTS[edictSelectedIdx];
+  document.getElementById('edict-detail-title').textContent = edict.title;
+  const body = document.getElementById('edict-detail-body');
+  body.innerHTML = '';
+  edict.body.split('\n').forEach(line => {
+    if (line === '') {
+      body.appendChild(document.createElement('br'));
+    } else {
+      const p = document.createElement('div');
+      p.textContent = line;
+      body.appendChild(p);
+    }
+  });
+  // Blur the edicts list window behind
+  document.getElementById('edicts-window-frame').classList.add('zoomed-out');
+  document.getElementById('edict-detail-overlay').classList.add('active');
+  bgLayer.classList.remove('zoomed-out');
+  bgLayer.classList.add('zoomed-out-deep');
+  playOpenSound();
+}
+
+function closeEdictDetail() {
+  if (!edictDetailOpen) return;
+  edictDetailOpen = false;
+  document.getElementById('edict-detail-overlay').classList.remove('active');
+  document.getElementById('edicts-window-frame').classList.remove('zoomed-out');
+  bgLayer.classList.remove('zoomed-out-deep');
+  bgLayer.classList.add('zoomed-out');
+  playCloseSound();
+}
+
+// Close button for edict detail
+document.getElementById('edict-detail-close').addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeEdictDetail();
+});
 
 function toggleReticleFx() {
   window._reticleFxEnabled = !window._reticleFxEnabled;
