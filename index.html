@@ -793,6 +793,20 @@ input[type="range"].union-range::-moz-range-thumb {
   text-align: right;
   text-shadow: 0 0 6px rgba(212, 137, 10, 0.2);
 }
+
+#sys-info {
+  position: fixed;
+  bottom: 24px;
+  right: 32px;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  opacity: 0.4;
+  text-align: right;
+  text-shadow: 0 0 6px rgba(212, 137, 10, 0.2);
+  line-height: 1.6;
+  pointer-events: none;
+  z-index: 5;
+}
 </style>
 </head>
 <body>
@@ -898,6 +912,9 @@ input[type="range"].union-range::-moz-range-thumb {
     <div id="status-coords">0000 : 0000</div>
     <div id="status-time"></div>
   </div>
+
+  <!-- System Info -->
+  <div id="sys-info"></div>
 
   <!-- Main interface -->
   <div id="interface">
@@ -1277,6 +1294,72 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+/* ═══════════════════════════════════════════
+   SYSTEM INFO (bottom-right)
+   ═══════════════════════════════════════════ */
+const sysInfoEl = document.getElementById('sys-info');
+(async function populateSysInfo() {
+  const lines = [];
+  // Platform & cores
+  const platform = navigator.platform || 'UNKNOWN';
+  const cores = navigator.hardwareConcurrency || '?';
+  const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : '?';
+  const lang = (navigator.language || 'EN').toUpperCase();
+  const online = navigator.onLine ? 'ONLINE' : 'OFFLINE';
+  const screenRes = screen.width + 'x' + screen.height;
+  const colorDepth = screen.colorDepth + 'BIT';
+
+  // Connection info
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const connType = conn ? (conn.effectiveType || conn.type || '?').toUpperCase() : '?';
+  const downlink = conn && conn.downlink ? conn.downlink + ' MBPS' : '?';
+
+  // IP & location from API
+  let ip = '?.?.?.?';
+  let city = '?';
+  let region = '?';
+  let country = '?';
+  let org = '?';
+  let loc = '?';
+  try {
+    const resp = await fetch('https://ipinfo.io/json?token=');
+    if (resp.ok) {
+      const data = await resp.json();
+      ip = data.ip || ip;
+      city = (data.city || '?').toUpperCase();
+      region = (data.region || '?').toUpperCase();
+      country = (data.country || '?').toUpperCase();
+      org = (data.org || '?').toUpperCase();
+      loc = data.loc || '?';
+    }
+  } catch(e) {}
+
+  // Battery
+  let battLine = null;
+  try {
+    if (navigator.getBattery) {
+      const batt = await navigator.getBattery();
+      const pct = Math.round(batt.level * 100);
+      const charging = batt.charging ? 'CHARGING' : 'DISCHARGING';
+      battLine = 'BATTERY: ' + pct + '% ' + charging;
+    }
+  } catch(e) {}
+
+  lines.push('IP: ' + ip);
+  lines.push('LOC: ' + city + ', ' + region + ', ' + country);
+  lines.push('COORDS: ' + loc);
+  lines.push('ISP: ' + org);
+  lines.push('NET: ' + connType + ' / ' + downlink);
+  lines.push('STATUS: ' + online);
+  lines.push('PLATFORM: ' + platform);
+  lines.push('CORES: ' + cores + ' / MEM: ' + mem);
+  lines.push('DISPLAY: ' + screenRes + ' / ' + colorDepth);
+  lines.push('LANG: ' + lang);
+  if (battLine) lines.push(battLine);
+
+  sysInfoEl.innerHTML = lines.join('<br>');
+})();
 
 /* ═══════════════════════════════════════════
    COMMAND SYSTEM
@@ -2171,7 +2254,8 @@ function playCloseSound() {
 
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    const cmd = input.value.trim().toLowerCase();
+    const rawCmd = input.value.trim();
+    const cmd = rawCmd.toLowerCase();
     input.value = '';
 
     // Echo the command
@@ -2182,6 +2266,15 @@ input.addEventListener('keydown', (e) => {
     // C64 easter egg
     if (cmd === 'load "*",8,1') {
       switchToC64();
+      return;
+    }
+
+    // C64 BASIC mode — route to interpreter
+    if (window._c64Mode) {
+      const out = basic.handleInput(rawCmd, addLines);
+      if (out && out.length > 0) {
+        addLines(out);
+      }
       return;
     }
 
@@ -2309,6 +2402,435 @@ function switchToC64() {
 
   addLines(['', 'READY.'], false);
 }
+
+/* ═══════════════════════════════════════════
+   COMMODORE BASIC INTERPRETER
+   ═══════════════════════════════════════════ */
+const basic = {
+  program: {},    // line number -> source
+  vars: {},       // variable storage
+  running: false,
+  stopped: false,
+  forStack: [],   // FOR/NEXT stack
+
+  reset() {
+    this.program = {};
+    this.vars = {};
+    this.running = false;
+    this.stopped = false;
+    this.forStack = [];
+  },
+
+  // Tokenize a BASIC expression (very simple recursive descent)
+  evalExpr(expr) {
+    expr = expr.trim();
+    // String literal
+    if (expr.startsWith('"') && expr.endsWith('"')) {
+      return expr.slice(1, -1);
+    }
+    // String concatenation with +
+    if (expr.includes('"')) {
+      // Split on + but respect quotes
+      const parts = this.splitPlus(expr);
+      if (parts.length > 1) {
+        return parts.map(p => this.evalExpr(p)).join('');
+      }
+    }
+    // Functions
+    const fnMatch = expr.match(/^(INT|ABS|RND|SQR|LEN|CHR\$|ASC|LEFT\$|RIGHT\$|MID\$|STR\$|VAL|TAB|SPC)\((.+)\)$/i);
+    if (fnMatch) {
+      const fn = fnMatch[1].toUpperCase();
+      const arg = fnMatch[2];
+      switch(fn) {
+        case 'INT': return Math.floor(this.evalExpr(arg));
+        case 'ABS': return Math.abs(this.evalExpr(arg));
+        case 'RND': return Math.random();
+        case 'SQR': return Math.sqrt(this.evalExpr(arg));
+        case 'LEN': return String(this.evalExpr(arg)).length;
+        case 'CHR$': return String.fromCharCode(this.evalExpr(arg));
+        case 'ASC': return String(this.evalExpr(arg)).charCodeAt(0);
+        case 'STR$': return String(this.evalExpr(arg));
+        case 'VAL': return parseFloat(this.evalExpr(arg)) || 0;
+        case 'TAB': return ' '.repeat(Math.max(0, this.evalExpr(arg)));
+        case 'SPC': return ' '.repeat(Math.max(0, this.evalExpr(arg)));
+        default: return 0;
+      }
+    }
+    // Numeric + with no quotes
+    if (!expr.includes('"')) {
+      // Handle comparison operators
+      for (const op of ['<=', '>=', '<>', '<', '>', '=']) {
+        const idx = expr.indexOf(op);
+        if (idx > 0) {
+          const l = this.evalExpr(expr.slice(0, idx));
+          const r = this.evalExpr(expr.slice(idx + op.length));
+          switch(op) {
+            case '<=': return l <= r ? -1 : 0;
+            case '>=': return l >= r ? -1 : 0;
+            case '<>': return l !== r ? -1 : 0;
+            case '<': return l < r ? -1 : 0;
+            case '>': return l > r ? -1 : 0;
+            case '=': return l === r ? -1 : 0;
+          }
+        }
+      }
+      // Arithmetic: +, -
+      // Find last + or - not inside parens
+      let depth = 0;
+      for (let i = expr.length - 1; i > 0; i--) {
+        if (expr[i] === ')') depth++;
+        if (expr[i] === '(') depth--;
+        if (depth === 0 && (expr[i] === '+' || expr[i] === '-')) {
+          const l = this.evalExpr(expr.slice(0, i));
+          const r = this.evalExpr(expr.slice(i + 1));
+          return expr[i] === '+' ? l + r : l - r;
+        }
+      }
+      // *, /
+      depth = 0;
+      for (let i = expr.length - 1; i > 0; i--) {
+        if (expr[i] === ')') depth++;
+        if (expr[i] === '(') depth--;
+        if (depth === 0 && (expr[i] === '*' || expr[i] === '/')) {
+          const l = this.evalExpr(expr.slice(0, i));
+          const r = this.evalExpr(expr.slice(i + 1));
+          return expr[i] === '*' ? l * r : l / r;
+        }
+      }
+      // Parens
+      if (expr.startsWith('(') && expr.endsWith(')')) {
+        return this.evalExpr(expr.slice(1, -1));
+      }
+    }
+    // Number
+    const num = parseFloat(expr);
+    if (!isNaN(num)) return num;
+    // Variable
+    const varName = expr.toUpperCase().trim();
+    if (varName in this.vars) return this.vars[varName];
+    // Treat undefined vars as 0
+    return 0;
+  },
+
+  splitPlus(expr) {
+    const parts = [];
+    let current = '';
+    let inStr = false;
+    let depth = 0;
+    for (let i = 0; i < expr.length; i++) {
+      const ch = expr[i];
+      if (ch === '"') inStr = !inStr;
+      if (!inStr && ch === '(') depth++;
+      if (!inStr && ch === ')') depth--;
+      if (!inStr && depth === 0 && ch === '+') {
+        parts.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    parts.push(current);
+    return parts;
+  },
+
+  // Execute a single BASIC statement, returns output lines
+  execStatement(line) {
+    line = line.trim();
+    const output = [];
+    const upper = line.toUpperCase();
+
+    // PRINT
+    if (upper.startsWith('PRINT') || upper.startsWith('?')) {
+      const arg = line.slice(upper.startsWith('?') ? 1 : 5).trim();
+      if (!arg) {
+        output.push('');
+      } else {
+        // Handle ; separators (no newline between parts)
+        const parts = [];
+        let current = '';
+        let inStr = false;
+        for (let i = 0; i < arg.length; i++) {
+          if (arg[i] === '"') inStr = !inStr;
+          if (!inStr && arg[i] === ';') {
+            parts.push(current);
+            current = '';
+          } else {
+            current += arg[i];
+          }
+        }
+        parts.push(current);
+        let result = '';
+        for (const p of parts) {
+          const trimmed = p.trim();
+          if (trimmed) result += String(this.evalExpr(trimmed));
+        }
+        output.push(result);
+      }
+    }
+    // LET / variable assignment
+    else if (upper.startsWith('LET ') || /^[A-Z][A-Z0-9$]*\s*=/.test(upper)) {
+      const assignStr = upper.startsWith('LET ') ? line.slice(4) : line;
+      const eqIdx = assignStr.indexOf('=');
+      const varName = assignStr.slice(0, eqIdx).trim().toUpperCase();
+      const val = this.evalExpr(assignStr.slice(eqIdx + 1));
+      this.vars[varName] = val;
+    }
+    // CLR
+    else if (upper === 'CLR' || upper === 'CLS') {
+      document.getElementById('output').innerHTML = '';
+    }
+    // POKE - simulate C64 memory-mapped I/O
+    else if (upper.startsWith('POKE')) {
+      const args = line.slice(4).split(',');
+      if (args.length === 2) {
+        const addr = parseInt(args[0].trim());
+        const val = parseInt(args[1].trim());
+        // 53280 = border color, 53281 = background color
+        const c64Colors = ['#000', '#FFF', '#880000', '#AAFFEE', '#CC44CC', '#00CC55', '#0000AA', '#EEEE77', '#DD8855', '#664400', '#FF7777', '#333333', '#777777', '#AAFF66', '#0088FF', '#BBBBBB'];
+        if (addr === 53280 && val >= 0 && val <= 15) {
+          document.getElementById('c64-border').style.borderColor = c64Colors[val];
+        } else if (addr === 53281 && val >= 0 && val <= 15) {
+          document.body.style.backgroundColor = c64Colors[val];
+        }
+      }
+    }
+    // NEW
+    else if (upper === 'NEW') {
+      this.reset();
+      output.push('', 'READY.');
+    }
+    // LIST
+    else if (upper === 'LIST') {
+      const lineNums = Object.keys(this.program).map(Number).sort((a,b) => a - b);
+      if (lineNums.length === 0) {
+        output.push('READY.');
+      } else {
+        for (const n of lineNums) {
+          output.push(n + ' ' + this.program[n]);
+        }
+        output.push('', 'READY.');
+      }
+    }
+    // SYS
+    else if (upper.startsWith('SYS')) {
+      const addr = parseInt(line.slice(3).trim());
+      if (addr === 64738) {
+        // Soft reset
+        this.reset();
+        document.getElementById('output').innerHTML = '';
+        output.push('', '**** COMMODORE 64 BASIC V2 ****', '', '64K RAM SYSTEM  38911 BASIC BYTES FREE', '', 'READY.');
+      } else {
+        output.push('?ILLEGAL QUANTITY  ERROR');
+      }
+    }
+
+    return output;
+  },
+
+  // Run stored program
+  async run(addLinesFn) {
+    const lineNums = Object.keys(this.program).map(Number).sort((a,b) => a - b);
+    if (lineNums.length === 0) return ['?NO PROGRAM'];
+    this.running = true;
+    this.stopped = false;
+    this.forStack = [];
+    let pc = 0;
+    let iterations = 0;
+    const MAX_ITER = 10000;
+
+    while (pc < lineNums.length && this.running && iterations < MAX_ITER) {
+      iterations++;
+      const lineNum = lineNums[pc];
+      let stmt = this.program[lineNum];
+      const upper = stmt.toUpperCase().trim();
+
+      // GOTO
+      if (upper.startsWith('GOTO')) {
+        const target = parseInt(stmt.slice(4).trim());
+        const idx = lineNums.indexOf(target);
+        if (idx === -1) {
+          addLinesFn(['?UNDEF\'D STATEMENT ERROR IN ' + lineNum]);
+          break;
+        }
+        pc = idx;
+        continue;
+      }
+
+      // GOSUB
+      if (upper.startsWith('GOSUB')) {
+        const target = parseInt(stmt.slice(5).trim());
+        const idx = lineNums.indexOf(target);
+        if (idx === -1) {
+          addLinesFn(['?UNDEF\'D STATEMENT ERROR IN ' + lineNum]);
+          break;
+        }
+        this.forStack.push({ type: 'gosub', returnPc: pc + 1 });
+        pc = idx;
+        continue;
+      }
+
+      // RETURN
+      if (upper === 'RETURN') {
+        const frame = this.forStack.pop();
+        if (!frame || frame.type !== 'gosub') {
+          addLinesFn(['?RETURN WITHOUT GOSUB ERROR IN ' + lineNum]);
+          break;
+        }
+        pc = frame.returnPc;
+        continue;
+      }
+
+      // IF/THEN
+      if (upper.startsWith('IF')) {
+        const thenIdx = upper.indexOf('THEN');
+        if (thenIdx === -1) {
+          addLinesFn(['?SYNTAX ERROR IN ' + lineNum]);
+          pc++;
+          continue;
+        }
+        const condition = stmt.slice(2, thenIdx).trim();
+        const thenPart = stmt.slice(thenIdx + 4).trim();
+        const result = this.evalExpr(condition);
+        if (result) {
+          // THEN can be a line number (GOTO) or a statement
+          const targetLine = parseInt(thenPart);
+          if (!isNaN(targetLine)) {
+            const idx = lineNums.indexOf(targetLine);
+            if (idx === -1) {
+              addLinesFn(['?UNDEF\'D STATEMENT ERROR IN ' + lineNum]);
+              break;
+            }
+            pc = idx;
+            continue;
+          } else {
+            const out = this.execStatement(thenPart);
+            if (out.length) addLinesFn(out);
+          }
+        }
+        pc++;
+        continue;
+      }
+
+      // FOR
+      if (upper.startsWith('FOR')) {
+        const forMatch = stmt.match(/FOR\s+([A-Z][A-Z0-9]*)\s*=\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i);
+        if (forMatch) {
+          const varName = forMatch[1].toUpperCase();
+          const from = this.evalExpr(forMatch[2]);
+          const to = this.evalExpr(forMatch[3]);
+          const step = forMatch[4] ? this.evalExpr(forMatch[4]) : 1;
+          this.vars[varName] = from;
+          this.forStack.push({ type: 'for', varName, to, step, pc: pc + 1 });
+        }
+        pc++;
+        continue;
+      }
+
+      // NEXT
+      if (upper.startsWith('NEXT')) {
+        const varName = stmt.slice(4).trim().toUpperCase();
+        let frame = null;
+        for (let i = this.forStack.length - 1; i >= 0; i--) {
+          if (this.forStack[i].type === 'for' && (!varName || this.forStack[i].varName === varName)) {
+            frame = this.forStack[i];
+            break;
+          }
+        }
+        if (!frame) {
+          addLinesFn(['?NEXT WITHOUT FOR ERROR IN ' + lineNum]);
+          break;
+        }
+        this.vars[frame.varName] += frame.step;
+        if ((frame.step > 0 && this.vars[frame.varName] <= frame.to) ||
+            (frame.step < 0 && this.vars[frame.varName] >= frame.to)) {
+          pc = frame.pc;
+        } else {
+          // Remove the for frame
+          const idx = this.forStack.lastIndexOf(frame);
+          this.forStack.splice(idx, 1);
+          pc++;
+        }
+        continue;
+      }
+
+      // END / STOP
+      if (upper === 'END' || upper === 'STOP') {
+        this.running = false;
+        addLinesFn([upper === 'STOP' ? 'BREAK IN ' + lineNum : '', 'READY.']);
+        return [];
+      }
+
+      // REM (comment)
+      if (upper.startsWith('REM')) {
+        pc++;
+        continue;
+      }
+
+      // Regular statement
+      const out = this.execStatement(stmt);
+      if (out.length) addLinesFn(out);
+      pc++;
+
+      // Yield to browser every 100 iterations
+      if (iterations % 100 === 0) {
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    if (iterations >= MAX_ITER) {
+      addLinesFn(['', '?OUT OF MEMORY ERROR', '', 'READY.']);
+    } else if (this.running) {
+      addLinesFn(['', 'READY.']);
+    }
+    this.running = false;
+    return [];
+  },
+
+  // Handle a line of input in C64 mode
+  handleInput(raw, addLinesFn) {
+    const line = raw.trim();
+    const upper = line.toUpperCase();
+
+    // Numbered line = store in program
+    const lineNumMatch = line.match(/^(\d+)\s*(.*)/);
+    if (lineNumMatch) {
+      const num = parseInt(lineNumMatch[1]);
+      const stmt = lineNumMatch[2];
+      if (!stmt) {
+        delete this.program[num];
+      } else {
+        this.program[num] = stmt;
+      }
+      return [];
+    }
+
+    // RUN
+    if (upper === 'RUN') {
+      this.run(addLinesFn);
+      return [];
+    }
+
+    // LIST, NEW, CLR handled as direct statements
+    if (upper === 'LIST' || upper === 'NEW' || upper === 'CLR' || upper === 'CLS') {
+      return this.execStatement(line);
+    }
+
+    // SYS
+    if (upper.startsWith('SYS')) {
+      return this.execStatement(line);
+    }
+
+    // Direct mode — any valid statement
+    const out = this.execStatement(line);
+    if (out.length) return out;
+
+    // Unknown
+    if (line) {
+      return ['?SYNTAX ERROR'];
+    }
+    return [];
+  }
+};
 
 /* ═══════════════════════════════════════════
    SCREENSAVER — BOUNCING BALL WITH TRAIL
