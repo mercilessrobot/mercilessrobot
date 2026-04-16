@@ -31,6 +31,59 @@ body {
   -webkit-font-smoothing: none;
 }
 
+/* ═══════════════════════════════════════════
+   POWER BUTTON & BOOT SCREEN
+   ═══════════════════════════════════════════ */
+#power-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  pointer-events: auto;
+}
+
+#power-screen.done { display: none; }
+
+#power-btn {
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  background: transparent;
+  border: 1px solid var(--amber-dim);
+  padding: 16px 48px;
+  cursor: none;
+  text-shadow: 0 0 8px rgba(212, 137, 10, 0.3);
+  transition: background 0.15s, color 0.15s;
+}
+
+#power-btn:hover {
+  background: var(--amber);
+  color: var(--bg);
+}
+
+/* Boot text output */
+#boot-output {
+  display: none;
+  position: fixed;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  bottom: 40px;
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.2rem;
+  color: var(--amber);
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  text-shadow: 0 0 6px rgba(212, 137, 10, 0.3);
+  white-space: pre-wrap;
+  z-index: 9001;
+}
+
 /* CRT scanline overlay */
 body::before {
   content: '';
@@ -810,6 +863,12 @@ input[type="range"].union-range::-moz-range-thumb {
 </style>
 </head>
 <body>
+
+<!-- Power Button Screen -->
+<div id="power-screen">
+  <button id="power-btn">BOOT</button>
+  <div id="boot-output"></div>
+</div>
 
 <!-- SVG Chromatic Aberration Filter -->
 <svg style="position:absolute;width:0;height:0;" aria-hidden="true">
@@ -3363,14 +3422,6 @@ function generateRandomPattern() {
 
 function initAudioOnce() {
   startAmbientAudio();
-  // Switch to 808 kit, init grid, populate random pattern, and auto-play
-  seqChangeKit('808');
-  document.getElementById('seq-kit-select').value = '808';
-  seqInit();
-  generateRandomPattern();
-  // Set quiet volume for background beat
-  if (seqVolGain) seqVolGain.gain.value = 0.08;
-  seqStart();
   document.removeEventListener('click', initAudioOnce);
   document.removeEventListener('keydown', initAudioOnce);
 }
@@ -4781,6 +4832,153 @@ function ascPlaySound(row) {
   const ascDest = (fxNodes.asc && fxNodes.asc.input) ? fxNodes.asc.input : (ascVolGain || masterGain || audioCtx.destination);
   env.connect(ascDest);
 }
+
+/* ═══════════════════════════════════════════
+   BOOT SEQUENCE
+   ═══════════════════════════════════════════ */
+// Hide main interface until boot completes (scanlines/reticle/sound stay visible)
+document.body.classList.add('pre-boot');
+
+const preBootStyle = document.createElement('style');
+preBootStyle.textContent = `
+  body.pre-boot #bg-layer,
+  body.pre-boot #screensaver,
+  body.pre-boot .corner,
+  body.pre-boot #status,
+  body.pre-boot #sys-info,
+  body.pre-boot .overlay-panel {
+    display: none !important;
+  }
+`;
+document.head.appendChild(preBootStyle);
+
+const powerScreen = document.getElementById('power-screen');
+const powerBtn = document.getElementById('power-btn');
+const bootOutput = document.getElementById('boot-output');
+
+function bootWriteLine(text) {
+  return new Promise(resolve => {
+    bootOutput.textContent += text + '\n';
+    bootOutput.scrollTop = bootOutput.scrollHeight;
+    resolve();
+  });
+}
+
+function bootDelay(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function runBootSequence() {
+  bootOutput.style.display = 'block';
+  powerBtn.style.display = 'none';
+
+  await bootDelay(400);
+
+  // RAM check
+  await bootWriteLine('ROBOT INDUSTRIES mOS BIOS v1.0');
+  await bootWriteLine('Copyright (C) 2026, ROBOT INDUSTRIES');
+  await bootDelay(300);
+  await bootWriteLine('');
+
+  // CPU detection
+  await bootWriteLine('Detecting CPU...');
+  await bootDelay(200);
+  const cores = navigator.hardwareConcurrency || 4;
+  await bootWriteLine('  MERCILESS-' + cores + ' Processor @ ' + (cores * 800) + ' MHz');
+  await bootDelay(150);
+  await bootWriteLine('');
+
+  // RAM count
+  await bootWriteLine('Checking RAM...');
+  const totalRam = (navigator.deviceMemory || 8) * 1024;
+  const steps = 16;
+  for (let i = 1; i <= steps; i++) {
+    const current = Math.floor((totalRam / steps) * i);
+    bootOutput.textContent = bootOutput.textContent.replace(/  \d+K.*OK\n?$|Checking RAM\.\.\.\n?$/, '');
+    if (i < steps) {
+      await bootWriteLine('  ' + current + 'K');
+    } else {
+      await bootWriteLine('  ' + current + 'K ... OK');
+    }
+    await bootDelay(40);
+  }
+  await bootDelay(200);
+  await bootWriteLine('');
+
+  // POST checks
+  const checks = [
+    ['Video Adapter', 'MERCILESS CRT-1 AMBER'],
+    ['Audio System', 'WEB AUDIO API v1'],
+    ['Keyboard', 'USB HID DETECTED'],
+    ['Pointing Device', 'RETICLE TRACKING SYSTEM'],
+    ['Network', navigator.onLine ? 'CONNECTED' : 'OFFLINE'],
+    ['Storage', 'INDEXED-DB 2.0'],
+    ['Timer', 'RTC OK'],
+    ['DMA Controller', 'CHANNELS 0-3 OK'],
+  ];
+
+  await bootWriteLine('POST Check:');
+  for (const [name, result] of checks) {
+    await bootWriteLine('  ' + name.padEnd(24, '.') + ' ' + result);
+    await bootDelay(80 + Math.random() * 120);
+  }
+  await bootDelay(200);
+  await bootWriteLine('');
+
+  // Disk init
+  await bootWriteLine('Initializing disk subsystem...');
+  await bootDelay(150);
+  await bootWriteLine('  Drive 0: MERCILESS-OS SYSTEM DISK');
+  await bootDelay(100);
+  await bootWriteLine('  Drive 1: USER DATA PARTITION');
+  await bootDelay(200);
+  await bootWriteLine('');
+
+  // Loading OS
+  await bootWriteLine('Loading mOS v1.0...');
+  await bootDelay(300);
+  await bootWriteLine('  Kernel modules loaded');
+  await bootDelay(150);
+  await bootWriteLine('  Audio subsystem initialized');
+  await bootDelay(100);
+  await bootWriteLine('  Reticle tracking online');
+  await bootDelay(100);
+  await bootWriteLine('  CRT phosphor calibration complete');
+  await bootDelay(200);
+  await bootWriteLine('');
+
+  // System ready
+  await bootWriteLine('All systems nominal.');
+  await bootDelay(300);
+  await bootWriteLine('');
+  await bootWriteLine('Booting mOS...');
+  await bootDelay(800);
+
+  // Transition to main screen
+  powerScreen.style.transition = 'opacity 0.5s';
+  powerScreen.style.opacity = '0';
+  document.body.classList.remove('pre-boot');
+  await bootDelay(500);
+  powerScreen.classList.add('done');
+  powerScreen.style.opacity = '';
+
+  // Start the beat after boot
+  seqChangeKit('808');
+  document.getElementById('seq-kit-select').value = '808';
+  seqInit();
+  generateRandomPattern();
+  if (seqVolGain) seqVolGain.gain.value = 0.08;
+  seqStart();
+}
+
+powerBtn.addEventListener('click', () => {
+  // Init audio on button click (user gesture required)
+  document.removeEventListener('click', initAudioOnce);
+  document.removeEventListener('keydown', initAudioOnce);
+  startAmbientAudio();
+  runBootSequence();
+});
+
 </script>
 </body>
 </html>
