@@ -1569,6 +1569,11 @@ const commands = {
   absolve: () => {
     showOverlay('absolve-overlay');
     seqInit();
+    // Restore volume from Union slider when opening
+    if (seqVolGain) {
+      const sliderVal = parseFloat(document.getElementById('union-vol-seq').value) || 0.8;
+      seqVolGain.gain.setTargetAtTime(sliderVal, audioCtx.currentTime, 0.05);
+    }
     return [];
   },
 
@@ -3145,7 +3150,7 @@ function startAmbientAudio() {
   // Global reticle position for sequencer modulation
   window._reticleX = 0.5;
   window._reticleY = 0.5;
-  window._reticleFxEnabled = true;
+  window._reticleFxEnabled = false;
 
   document.addEventListener('mousemove', (e) => {
     if (!audioCtx || !soundEnabled) return;
@@ -3300,8 +3305,72 @@ function startAmbientAudio() {
 }
 
 // Browsers require user gesture to start audio
+function generateRandomPattern() {
+  // Generate a random 808 beat pattern into seqGrid
+  // Must be called after seqInit so seqGrid exists
+  const rows = SEQ_ROWS;
+  const kickIdx = rows.findIndex(r => r.type === '808-kick');
+  const hihatIdx = rows.findIndex(r => r.type === '808-hihat');
+  const snareIdx = rows.findIndex(r => r.type === '808-snare');
+  const clapIdx = rows.findIndex(r => r.type === '808-clap');
+  const cowbellIdx = rows.findIndex(r => r.type === '808-cowbell');
+  const congaIdx = rows.findIndex(r => r.type === '808-conga');
+
+  const kickStyles = [
+    [0,4,8,12], [0,6,10,12], [0,3,8,11], [0,4,10,12],
+    [0,8,10,14], [0,2,8,10], [0,4,6,10], [0,8,12,14]
+  ];
+  const snareStyles = [
+    [4,12], [4,10], [8,12], [4,8,12], [2,6,10,14]
+  ];
+  const kickPattern = kickStyles[Math.floor(Math.random() * kickStyles.length)];
+  const snarePattern = snareStyles[Math.floor(Math.random() * snareStyles.length)];
+  const hihatDensity = Math.random();
+  const useClap = Math.random() > 0.5;
+  const useCowbell = Math.random() > 0.7;
+  const useConga = Math.random() > 0.6;
+
+  for (let s = 0; s < SEQ_STEPS; s++) {
+    // Hihat
+    if (hihatIdx >= 0) {
+      if (hihatDensity > 0.5) {
+        seqGrid[hihatIdx][s] = true;
+      } else if (hihatDensity > 0.25) {
+        if (s % 2 === 0) seqGrid[hihatIdx][s] = true;
+      } else {
+        if (s % 4 === 0 || s % 4 === 2) seqGrid[hihatIdx][s] = true;
+      }
+    }
+    // Kick
+    if (kickIdx >= 0 && kickPattern.includes(s)) seqGrid[kickIdx][s] = true;
+    // Snare or clap
+    if (snarePattern.includes(s)) {
+      const idx = useClap && clapIdx >= 0 ? clapIdx : snareIdx;
+      if (idx >= 0) seqGrid[idx][s] = true;
+    }
+    // Random extras
+    if (useCowbell && cowbellIdx >= 0 && Math.random() > 0.8) seqGrid[cowbellIdx][s] = true;
+    if (useConga && congaIdx >= 0 && Math.random() > 0.85) seqGrid[congaIdx][s] = true;
+  }
+
+  // Update UI cells to reflect the grid
+  const gridEl = document.getElementById('seq-grid');
+  gridEl.querySelectorAll('.seq-cell').forEach(cell => {
+    const r = parseInt(cell.dataset.row), s = parseInt(cell.dataset.step);
+    cell.classList.toggle('on', seqGrid[r][s]);
+  });
+}
+
 function initAudioOnce() {
   startAmbientAudio();
+  // Switch to 808 kit, init grid, populate random pattern, and auto-play
+  seqChangeKit('808');
+  document.getElementById('seq-kit-select').value = '808';
+  seqInit();
+  generateRandomPattern();
+  // Set quiet volume for background beat
+  if (seqVolGain) seqVolGain.gain.value = 0.08;
+  seqStart();
   document.removeEventListener('click', initAudioOnce);
   document.removeEventListener('keydown', initAudioOnce);
 }
