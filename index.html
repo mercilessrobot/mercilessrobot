@@ -1098,6 +1098,12 @@ input[type="range"].union-range::-moz-range-thumb {
         </div>
         <div class="seq-container" id="seq-grid"></div>
         <div class="seq-playhead" id="seq-playhead"></div>
+        <div class="fx-indicators" style="margin-top:16px;display:flex;gap:8px;font-size:1.1rem;letter-spacing:0.1em;">
+          <span class="fx-tag" data-fx="echo" id="abs-fx-echo" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[E] ECHO</span>
+          <span class="fx-tag" data-fx="flange" id="abs-fx-flange" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[F] FLANGE</span>
+          <span class="fx-tag" data-fx="destroy" id="abs-fx-destroy" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[D] DESTROY</span>
+          <span class="fx-tag" data-fx="reverb" id="abs-fx-reverb" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[R] REVERB</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1126,6 +1132,12 @@ input[type="range"].union-range::-moz-range-thumb {
         </div>
         <div class="seq-container" id="asc-grid"></div>
         <div class="seq-playhead" id="asc-playhead"></div>
+        <div class="fx-indicators" style="margin-top:16px;display:flex;gap:8px;font-size:1.1rem;letter-spacing:0.1em;">
+          <span class="fx-tag" data-fx="echo" id="asc-fx-echo" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[E] ECHO</span>
+          <span class="fx-tag" data-fx="flange" id="asc-fx-flange" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[F] FLANGE</span>
+          <span class="fx-tag" data-fx="destroy" id="asc-fx-destroy" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[D] DESTROY</span>
+          <span class="fx-tag" data-fx="reverb" id="asc-fx-reverb" style="opacity:0.3;border:1px solid var(--amber-dim);padding:4px 10px;">[R] REVERB</span>
+        </div>
       </div>
     </div>
   </div>
@@ -3081,6 +3093,10 @@ function startAmbientAudio() {
   ascVolGain.gain.value = 0.8;
   ascVolGain.connect(master);
 
+  // Create FX chains for absolve and ascend
+  fxNodes.abs = fxCreateChain(seqVolGain);
+  fxNodes.asc = fxCreateChain(ascVolGain);
+
   // ── CRT Monitor Hum (60Hz fundamental + harmonics) ──
   const humGain = audioCtx.createGain();
   humGain.gain.value = 0.35;
@@ -3842,13 +3858,154 @@ function seqGetADSR() {
   };
 }
 
-function seqPlaySound(row) {
+/* ═══════════════════════════════════════════
+   AUDIO EFFECTS CHAIN (E=Echo, F=Flange, D=Destroy, R=Reverb)
+   ═══════════════════════════════════════════ */
+const fx = { echo: false, flange: false, destroy: false, reverb: false };
+let fxNodes = { abs: null, asc: null };
+
+function fxCreateChain(outputNode) {
+  if (!audioCtx) return outputNode;
+  const chain = {};
+
+  // Echo: delay + feedback
+  chain.echoDelay = audioCtx.createDelay(1.0);
+  chain.echoDelay.delayTime.value = 0.25;
+  chain.echoFeedback = audioCtx.createGain();
+  chain.echoFeedback.gain.value = 0.4;
+  chain.echoWet = audioCtx.createGain();
+  chain.echoWet.gain.value = 0;
+  chain.echoDelay.connect(chain.echoFeedback);
+  chain.echoFeedback.connect(chain.echoDelay);
+  chain.echoDelay.connect(chain.echoWet);
+
+  // Flange: modulated short delay
+  chain.flangeDelay = audioCtx.createDelay(0.02);
+  chain.flangeDelay.delayTime.value = 0.005;
+  chain.flangeLfo = audioCtx.createOscillator();
+  chain.flangeLfo.type = 'sine';
+  chain.flangeLfo.frequency.value = 0.4;
+  chain.flangeDepth = audioCtx.createGain();
+  chain.flangeDepth.gain.value = 0.003;
+  chain.flangeLfo.connect(chain.flangeDepth);
+  chain.flangeDepth.connect(chain.flangeDelay.delayTime);
+  chain.flangeLfo.start();
+  chain.flangeWet = audioCtx.createGain();
+  chain.flangeWet.gain.value = 0;
+  chain.flangeDelay.connect(chain.flangeWet);
+
+  // Destroy: waveshaper distortion + bitcrusher feel
+  chain.destroyShaper = audioCtx.createWaveShaper();
+  const dCurve = new Float32Array(1024);
+  for (let i = 0; i < 1024; i++) {
+    const x = (i / 512) - 1;
+    dCurve[i] = Math.tanh(x * 4) * 0.8;
+  }
+  chain.destroyShaper.curve = dCurve;
+  chain.destroyShaper.oversample = '4x';
+  chain.destroyFilter = audioCtx.createBiquadFilter();
+  chain.destroyFilter.type = 'lowpass';
+  chain.destroyFilter.frequency.value = 3000;
+  chain.destroyFilter.Q.value = 8;
+  chain.destroyWet = audioCtx.createGain();
+  chain.destroyWet.gain.value = 0;
+  chain.destroyDry = audioCtx.createGain();
+  chain.destroyDry.gain.value = 1;
+  chain.destroyShaper.connect(chain.destroyFilter);
+  chain.destroyFilter.connect(chain.destroyWet);
+
+  // Reverb: convolver with generated impulse
+  chain.reverbConv = audioCtx.createConvolver();
+  const irLen = Math.floor(audioCtx.sampleRate * 2);
+  const irBuf = audioCtx.createBuffer(2, irLen, audioCtx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = irBuf.getChannelData(ch);
+    for (let i = 0; i < irLen; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 2.5);
+    }
+  }
+  chain.reverbConv.buffer = irBuf;
+  chain.reverbWet = audioCtx.createGain();
+  chain.reverbWet.gain.value = 0;
+  chain.reverbConv.connect(chain.reverbWet);
+
+  // Input node — everything connects here
+  chain.input = audioCtx.createGain();
+  chain.input.gain.value = 1;
+
+  // Dry path
+  chain.dry = audioCtx.createGain();
+  chain.dry.gain.value = 1;
+
+  // Routing: input -> dry -> output
+  // input -> effects (wet) -> output
+  chain.input.connect(chain.dry);
+  chain.dry.connect(outputNode);
+
+  // Echo send
+  chain.input.connect(chain.echoDelay);
+  chain.echoWet.connect(outputNode);
+
+  // Flange send
+  chain.input.connect(chain.flangeDelay);
+  chain.flangeWet.connect(outputNode);
+
+  // Destroy send (parallel)
+  chain.input.connect(chain.destroyShaper);
+  chain.destroyWet.connect(outputNode);
+
+  // Reverb send
+  chain.input.connect(chain.reverbConv);
+  chain.reverbWet.connect(outputNode);
+
+  return chain;
+}
+
+function fxUpdateChain(chain) {
+  if (!chain || !chain.echoWet) return;
+  const now = audioCtx.currentTime;
+  chain.echoWet.gain.linearRampToValueAtTime(fx.echo ? 0.5 : 0, now + 0.05);
+  chain.flangeWet.gain.linearRampToValueAtTime(fx.flange ? 0.7 : 0, now + 0.05);
+  chain.destroyWet.gain.linearRampToValueAtTime(fx.destroy ? 0.6 : 0, now + 0.05);
+  chain.destroyDry.gain.linearRampToValueAtTime(fx.destroy ? 0.4 : 1, now + 0.05);
+  chain.dry.gain.linearRampToValueAtTime(fx.destroy ? 0.4 : 1, now + 0.05);
+  chain.reverbWet.gain.linearRampToValueAtTime(fx.reverb ? 0.5 : 0, now + 0.05);
+}
+
+function fxToggle(effect) {
+  fx[effect] = !fx[effect];
+  // Update all chains
+  if (fxNodes.abs) fxUpdateChain(fxNodes.abs);
+  if (fxNodes.asc) fxUpdateChain(fxNodes.asc);
+  // Update UI indicators
+  document.querySelectorAll('.fx-tag[data-fx="' + effect + '"]').forEach(el => {
+    el.style.opacity = fx[effect] ? '1' : '0.3';
+    el.style.background = fx[effect] ? 'var(--amber)' : 'transparent';
+    el.style.color = fx[effect] ? 'var(--bg)' : 'var(--amber)';
+  });
+}
+
+// Key bindings for effects (only when absolve or ascend is open)
+document.addEventListener('keydown', (e) => {
+  if (!activeOverlay) return;
+  if (activeOverlay.id !== 'absolve-overlay' && activeOverlay.id !== 'ascend-overlay') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const key = e.key.toLowerCase();
+  if (key === 'e') { e.preventDefault(); fxToggle('echo'); }
+  if (key === 'f') { e.preventDefault(); fxToggle('flange'); }
+  if (key === 'd') { e.preventDefault(); fxToggle('destroy'); }
+  if (key === 'r') { e.preventDefault(); fxToggle('reverb'); }
+});
+
+function seqPlaySound(row, useAscChain) {
   if (!audioCtx || !soundEnabled) return;
   const now = audioCtx.currentTime;
   const adsr = seqGetADSR();
   const totalDur = adsr.a + adsr.d + adsr.r + 0.05;
   const peak = 0.5;
-  let dest = seqVolGain || masterGain || audioCtx.destination;
+  // Route through FX chain if available
+  const chain = useAscChain ? fxNodes.asc : fxNodes.abs;
+  let dest = (chain && chain.input) ? chain.input : (seqVolGain || masterGain || audioCtx.destination);
 
   const rx = window._reticleFxEnabled ? (window._reticleX || 0.5) : 0.5;
   const ry = window._reticleFxEnabled ? (window._reticleY || 0.5) : 0.5;
@@ -3950,6 +4107,9 @@ function seqPlaySound(row) {
   }
 
   // ── TR-808 KIT ──
+  // Volume boost for Roland kits
+  const kitBoost = 3.0;
+
   if (t === '808-kick') {
     const dur = 0.5 * dScale * rScale;
     const osc = audioCtx.createOscillator(); osc.type = 'sine';
@@ -3957,11 +4117,11 @@ function seqPlaySound(row) {
     osc.frequency.exponentialRampToValueAtTime(freq, now + 0.04);
     osc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + dur);
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(1.5 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(1.5 * sLevel * kitBoost, now + aDur);
     env.gain.exponentialRampToValueAtTime(0.001, now + dur);
     const click = audioCtx.createOscillator(); click.type = 'square';
     click.frequency.value = 200;
-    const clickE = audioCtx.createGain(); clickE.gain.setValueAtTime(0.4 * sLevel, now);
+    const clickE = audioCtx.createGain(); clickE.gain.setValueAtTime(0.4 * sLevel * kitBoost, now);
     clickE.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
     addWobble(osc, dur);
     osc.connect(env); env.connect(dest); click.connect(clickE); clickE.connect(dest);
@@ -3976,12 +4136,12 @@ function seqPlaySound(row) {
     const osc2 = audioCtx.createOscillator(); osc2.type = 'triangle';
     osc2.frequency.value = freq * 1.5 * pitchShift;
     const toneE = audioCtx.createGain(); toneE.gain.setValueAtTime(0.001, now);
-    toneE.gain.linearRampToValueAtTime(0.5 * sLevel, now + aDur);
+    toneE.gain.linearRampToValueAtTime(0.5 * sLevel * kitBoost, now + aDur);
     toneE.gain.exponentialRampToValueAtTime(0.001, now + dur);
     const noise = makeNoise(dur);
     const nfilt = audioCtx.createBiquadFilter(); nfilt.type = 'highpass'; nfilt.frequency.value = 2000;
     const noiseE = audioCtx.createGain(); noiseE.gain.setValueAtTime(0.001, now);
-    noiseE.gain.linearRampToValueAtTime(0.4 * sLevel, now + aDur);
+    noiseE.gain.linearRampToValueAtTime(0.4 * sLevel * kitBoost, now + aDur);
     noiseE.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc1.connect(toneE); osc2.connect(toneE); toneE.connect(dest);
     noise.connect(nfilt); nfilt.connect(noiseE); noiseE.connect(dest);
@@ -3993,7 +4153,7 @@ function seqPlaySound(row) {
   if (t === '808-hihat') {
     const dur = 0.06 * dScale * rScale;
     const freqs = [204, 298, 366, 515, 540, 800];
-    const mix = audioCtx.createGain(); mix.gain.value = 0.15;
+    const mix = audioCtx.createGain(); mix.gain.value = 0.15 * kitBoost;
     const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 10000; bp.Q.value = 1;
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
     env.gain.linearRampToValueAtTime(sLevel, now + aDur);
@@ -4009,7 +4169,7 @@ function seqPlaySound(row) {
   if (t === '808-cymbal') {
     const dur = 0.6 * dScale * rScale;
     const freqs = [204, 298, 366, 515, 540, 800];
-    const mix = audioCtx.createGain(); mix.gain.value = 0.12;
+    const mix = audioCtx.createGain(); mix.gain.value = 0.12 * kitBoost;
     const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 8000; bp.Q.value = 0.5;
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
     env.gain.linearRampToValueAtTime(sLevel, now + aDur);
@@ -4030,7 +4190,7 @@ function seqPlaySound(row) {
       const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 2;
       const e = audioCtx.createGain();
       e.gain.setValueAtTime(0, now + i * 0.012);
-      e.gain.linearRampToValueAtTime(0.6, now + i * 0.012 + 0.002);
+      e.gain.linearRampToValueAtTime(0.6 * kitBoost, now + i * 0.012 + 0.002);
       e.gain.exponentialRampToValueAtTime(0.001, now + i * 0.012 + 0.012);
       n.connect(bp); bp.connect(e); e.connect(dest);
       n.start(now + i * 0.012); n.stop(now + i * 0.012 + 0.015);
@@ -4051,7 +4211,7 @@ function seqPlaySound(row) {
     const o2 = audioCtx.createOscillator(); o2.type = 'square'; o2.frequency.value = 800 * pitchShift;
     const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = 3;
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(0.5 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(0.5 * sLevel * kitBoost, now + aDur);
     env.gain.exponentialRampToValueAtTime(0.001, now + dur);
     o1.connect(bp); o2.connect(bp); bp.connect(env); env.connect(dest);
     o1.start(now); o1.stop(now+dur); o2.start(now); o2.stop(now+dur);
@@ -4064,7 +4224,7 @@ function seqPlaySound(row) {
     osc.frequency.setValueAtTime(freq * 2, now);
     osc.frequency.exponentialRampToValueAtTime(freq, now + 0.02);
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(0.6 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(0.6 * sLevel * kitBoost, now + aDur);
     env.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(env); env.connect(dest); osc.start(now); osc.stop(now+dur);
     return;
@@ -4076,7 +4236,7 @@ function seqPlaySound(row) {
     osc.frequency.setValueAtTime(freq * 1.5, now);
     osc.frequency.exponentialRampToValueAtTime(freq, now + 0.05);
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(0.7 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(0.7 * sLevel * kitBoost, now + aDur);
     env.gain.exponentialRampToValueAtTime(0.001, now + dur);
     addWobble(osc, dur);
     osc.connect(env); env.connect(dest); osc.start(now); osc.stop(now+dur);
@@ -4091,10 +4251,10 @@ function seqPlaySound(row) {
     osc.frequency.exponentialRampToValueAtTime(freq, now + 0.025);
     osc.frequency.setTargetAtTime(freq * 0.8, now + 0.025, 0.1);
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(1.2 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(1.2 * sLevel * kitBoost, now + aDur);
     env.gain.setTargetAtTime(0.001, now + 0.05, 0.08 * rScale);
     const click = makeNoise(0.005);
-    const clickE = audioCtx.createGain(); clickE.gain.setValueAtTime(0.6 * sLevel, now);
+    const clickE = audioCtx.createGain(); clickE.gain.setValueAtTime(0.6 * sLevel * kitBoost, now);
     clickE.gain.exponentialRampToValueAtTime(0.001, now + 0.005);
     addWobble(osc, dur);
     osc.connect(env); env.connect(dest); click.connect(clickE); clickE.connect(dest);
@@ -4108,12 +4268,12 @@ function seqPlaySound(row) {
     osc.frequency.setValueAtTime(freq * 2, now);
     osc.frequency.exponentialRampToValueAtTime(freq, now + 0.01);
     const toneE = audioCtx.createGain(); toneE.gain.setValueAtTime(0.001, now);
-    toneE.gain.linearRampToValueAtTime(0.5 * sLevel, now + aDur);
+    toneE.gain.linearRampToValueAtTime(0.5 * sLevel * kitBoost, now + aDur);
     toneE.gain.exponentialRampToValueAtTime(0.001, now + dur * 0.6);
     const noise = makeNoise(dur);
     const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000;
     const noiseE = audioCtx.createGain(); noiseE.gain.setValueAtTime(0.001, now);
-    noiseE.gain.linearRampToValueAtTime(0.5 * sLevel, now + aDur);
+    noiseE.gain.linearRampToValueAtTime(0.5 * sLevel * kitBoost, now + aDur);
     noiseE.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(toneE); toneE.connect(dest);
     noise.connect(hp); hp.connect(noiseE); noiseE.connect(dest);
@@ -4124,7 +4284,7 @@ function seqPlaySound(row) {
   if (t === '909-hihat') {
     const dur = 0.04 * dScale * rScale;
     const freqs = [204, 298, 366, 515, 540, 800];
-    const mix = audioCtx.createGain(); mix.gain.value = 0.12;
+    const mix = audioCtx.createGain(); mix.gain.value = 0.12 * kitBoost;
     const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 9000;
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
     env.gain.linearRampToValueAtTime(sLevel, now + aDur);
@@ -4144,14 +4304,14 @@ function seqPlaySound(row) {
       const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 1.5;
       const e = audioCtx.createGain();
       e.gain.setValueAtTime(0, now + i * 0.01);
-      e.gain.linearRampToValueAtTime(0.5, now + i * 0.01 + 0.002);
+      e.gain.linearRampToValueAtTime(0.5 * kitBoost, now + i * 0.01 + 0.002);
       e.gain.exponentialRampToValueAtTime(0.001, now + i * 0.01 + 0.01);
       n.connect(bp); bp.connect(e); e.connect(dest);
       n.start(now + i * 0.01); n.stop(now + i * 0.01 + 0.012);
     }
     const tail = makeNoise(dur);
     const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1200;
-    const te = audioCtx.createGain(); te.gain.setValueAtTime(0.4, now + 0.035);
+    const te = audioCtx.createGain(); te.gain.setValueAtTime(0.4 * kitBoost, now + 0.035);
     te.gain.exponentialRampToValueAtTime(0.001, now + dur);
     tail.connect(hp); hp.connect(te); te.connect(dest);
     tail.start(now + 0.035); tail.stop(now + dur);
@@ -4161,18 +4321,18 @@ function seqPlaySound(row) {
   if (t === '909-crash' || t === '909-ride') {
     const dur = (t === '909-crash' ? 0.8 : 0.3) * dScale * rScale;
     const freqs = [204, 298, 366, 515, 540, 800];
-    const mix = audioCtx.createGain(); mix.gain.value = 0.1;
+    const mix = audioCtx.createGain(); mix.gain.value = 0.1 * kitBoost;
     const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass';
     bp.frequency.value = t === '909-crash' ? 6000 : 8000; bp.Q.value = 0.5;
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(0.8 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(0.8 * sLevel * kitBoost, now + aDur);
     env.gain.exponentialRampToValueAtTime(0.001, now + dur);
     freqs.forEach(f => {
       const o = audioCtx.createOscillator(); o.type = 'square'; o.frequency.value = f * pitchShift * 1.2;
       o.connect(mix); o.start(now); o.stop(now + dur);
     });
     const noise = makeNoise(dur);
-    const noiseG = audioCtx.createGain(); noiseG.gain.value = 0.08;
+    const noiseG = audioCtx.createGain(); noiseG.gain.value = 0.08 * kitBoost;
     noise.connect(noiseG); noiseG.connect(bp);
     mix.connect(bp); bp.connect(env); env.connect(dest);
     noise.start(now); noise.stop(now+dur);
@@ -4185,7 +4345,7 @@ function seqPlaySound(row) {
     osc.frequency.setValueAtTime(freq * 2.5, now);
     osc.frequency.exponentialRampToValueAtTime(freq, now + 0.03);
     const env = audioCtx.createGain(); env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(0.7 * sLevel, now + aDur);
+    env.gain.linearRampToValueAtTime(0.7 * sLevel * kitBoost, now + aDur);
     env.gain.exponentialRampToValueAtTime(0.001, now + dur);
     addWobble(osc, dur);
     osc.connect(env); env.connect(dest); osc.start(now); osc.stop(now+dur);
@@ -4203,7 +4363,7 @@ function seqPlaySound(row) {
     filt.frequency.setValueAtTime(freq * 8, now);
     filt.frequency.exponentialRampToValueAtTime(freq * 1.5, now + adsr.a + adsr.d);
     filt.Q.value = 12; // high resonance for acid squelch
-    const env = makeEnv(0.4);
+    const env = makeEnv(0.4 * kitBoost);
     addWobble(osc, dur);
     osc.connect(filt); filt.connect(env); env.connect(dest);
     osc.start(now); osc.stop(now+dur);
@@ -4218,8 +4378,8 @@ function seqPlaySound(row) {
     const filt = audioCtx.createBiquadFilter(); filt.type = 'lowpass';
     filt.frequency.setValueAtTime(freq * 12, now);
     filt.frequency.exponentialRampToValueAtTime(freq * 2, now + adsr.a + adsr.d);
-    filt.Q.value = 18; // extreme resonance
-    const env = makeEnv(0.5);
+    filt.Q.value = 18;
+    const env = makeEnv(0.5 * kitBoost);
     // Distortion
     const shaper = audioCtx.createWaveShaper();
     const curve = new Float32Array(256);
@@ -4241,8 +4401,8 @@ function seqPlaySound(row) {
     filt.frequency.setValueAtTime(freq * 6, now);
     filt.frequency.exponentialRampToValueAtTime(freq * 1.2, now + adsr.a + adsr.d);
     filt.Q.value = 8;
-    const mix = audioCtx.createGain(); mix.gain.value = 0.4;
-    const env = makeEnv(0.5);
+    const mix = audioCtx.createGain(); mix.gain.value = 0.4 * kitBoost;
+    const env = makeEnv(0.5 * kitBoost);
     addWobble(osc, dur);
     osc.connect(mix); sub.connect(mix); mix.connect(filt); filt.connect(env); env.connect(dest);
     osc.start(now); osc.stop(now+dur); sub.start(now); sub.stop(now+dur);
@@ -4445,12 +4605,9 @@ function ascGetADSR() {
 function ascPlaySound(row) {
   if (!audioCtx || !soundEnabled) return;
 
-  // Delegate 303 types to the shared synth engine (using ascend volume)
+  // Delegate 303 types to the shared synth engine (using ascend FX chain)
   if (row.type && row.type.startsWith('303')) {
-    const origSeqVol = seqVolGain;
-    seqVolGain = ascVolGain;
-    seqPlaySound(row);
-    seqVolGain = origSeqVol;
+    seqPlaySound(row, true);
     return;
   }
 
@@ -4552,7 +4709,8 @@ function ascPlaySound(row) {
   env.gain.linearRampToValueAtTime(0.001, now + adsr.a + adsr.d + adsr.r);
 
   formantMix.connect(env);
-  env.connect(ascVolGain || masterGain || audioCtx.destination);
+  const ascDest = (fxNodes.asc && fxNodes.asc.input) ? fxNodes.asc.input : (ascVolGain || masterGain || audioCtx.destination);
+  env.connect(ascDest);
 }
 </script>
 </body>
